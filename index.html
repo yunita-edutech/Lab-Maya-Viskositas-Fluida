@@ -1127,6 +1127,39 @@
         margin-top: 0 !important;
       }
     }
+  <style>
+    /* ===== FORCE-FIX: mobile blank panel bug (LKPD, Grafik, Pengembang) ===== */
+    @media (max-width: 768px) {
+      #panel-lkpd.active,
+      #panel-grafik.active,
+      #panel-pengembang.active {
+        display: flex !important;
+        flex-direction: column !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        overflow-y: auto !important;
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        right: auto !important;
+        bottom: auto !important;
+        transform: none !important;
+        z-index: 1 !important;
+        pointer-events: auto !important;
+        width: 100% !important;
+        contain: none !important;
+        clip: auto !important;
+        clip-path: none !important;
+      }
+      #panel-lkpd.active *,
+      #panel-grafik.active *,
+      #panel-pengembang.active * {
+        visibility: visible !important;
+      }
+    }
   </style>
   <script src="/_sdk/0179d719c431a79e.data_sdk.js" type="text/javascript" integrity="sha512-OsRvJkI5GkC3MJQcgotQYotpzrMSX415GiKKgvYdxQEEkzD/fdchShO2FMSy0PJr/tiINMXOk5Vl2zAgg6bUiA=="></script>
   <script src="/_sdk/0b3af1c300e720aa.resizing_sdk.js" type="text/javascript" integrity="sha512-nX1P6oXZmEY5wCI2lUVg3BwKu1cr0yi+ZpXgZ0Yn90vkSwvpmyzBMvOyD6VLJUtBwFI2dSrw1b6OvORxSggw3w=="></script>
