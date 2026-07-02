@@ -1,0 +1,2324 @@
+<!doctype html>
+<html lang="id"><head><script>window["__codeletBootstrap__"]=JSON.parse('{"A":"A","B":"20260702-01-a83755d"}');</script><script src="/_sdk/f432b76fb310b513.telemetry_sdk.js" integrity="sha512-9FJQ55EKmmqhyyik8BhrMVfm0+iYYfb8uOlRsjtkxJMEI97qOVEI4PnHohDjQAtvAep0IOEpdQ64eki0sz62ug=="></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+(function(){
+  function setVH(){
+    document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px');
+  }
+  setVH();
+  window.addEventListener('resize', setVH);
+  window.addEventListener('orientationchange', setVH);
+  if (window.visualViewport) { window.visualViewport.addEventListener('resize', setVH); }
+})();
+</script>
+  <title>Lab Maya Viskositas Fluida</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg-primary: #f0f9ff;
+      --bg-secondary: #ffffff;
+      --bg-tertiary: #e0f4ff;
+      --text-primary: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --accent: #06b6d4;
+      --accent-dark: #0891b2;
+      --accent-light: #cffafe;
+      --border: rgba(6,182,212,0.2);
+      --glass-bg: rgba(255,255,255,0.75);
+      --header-bg: rgba(15,23,42,0.92);
+      --nav-bg: rgba(15,23,42,0.8);
+      --card-bg: rgba(255,255,255,0.85);
+      --success: #10b981;
+      --warning: #f59e0b;
+      --error: #ef4444;
+    }
+    .dark {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-tertiary: #1e293b;
+      --text-primary: #f1f5f9;
+      --text-secondary: #cbd5e1;
+      --text-muted: #94a3b8;
+      --accent: #22d3ee;
+      --accent-dark: #06b6d4;
+      --accent-light: #164e63;
+      --border: rgba(34,211,238,0.3);
+      --glass-bg: rgba(30,41,59,0.85);
+      --header-bg: rgba(2,6,23,0.95);
+      --nav-bg: rgba(2,6,23,0.9);
+      --card-bg: rgba(30,41,59,0.9);
+      --success: #059669;
+      --warning: #d97706;
+      --error: #dc2626;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg-primary); color: var(--text-primary); transition: background 0.3s, color 0.3s; }
+    .app-root { width: 100%; height: calc(100 * min(var(--vh, 1vh), 1vh)); height: 100dvh; overflow: hidden; display: flex; flex-direction: column; }
+    #splash { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; transition: opacity 0.7s ease, transform 0.7s ease; }
+    #splash.hidden { opacity: 0; pointer-events: none; transform: scale(1.05); }
+    .splash-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(15,23,42,0.3) 0%, rgba(15,23,42,0.7) 100%); }
+    .splash-content-group { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.5rem; position: relative; z-index: 10; padding: 0 2rem; max-width: 600px; width: 100%; }
+    .splash-button-wrapper { display: flex; align-items: center; justify-content: center; margin-top: 4rem; }
+    .tab-btn { transition: all 0.25s ease; cursor: pointer; position: relative; overflow: hidden; }
+    .tab-btn.active { background: var(--accent) !important; color: #fff !important; box-shadow: 0 4px 12px rgba(6,182,212,0.3); }
+    .tab-panel { display: flex; flex-direction: column; opacity: 1; transform: translateY(0); padding: 12px; }
+    .tab-panel:not(.active) { display: none; opacity: 0; transform: translateY(8px); }
+    .glass-panel { background: var(--glass-bg); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 16px; transition: all 0.3s ease; }
+    .notebook-card { background: var(--card-bg); backdrop-filter: blur(8px); border: 1px solid var(--border); border-radius: 12px; transition: all 0.3s ease; }
+    .sim-ball { position: absolute; border-radius: 50%; z-index: 10; box-shadow: inset -3px -3px 6px rgba(0,0,0,0.3), inset 3px 3px 6px rgba(255,255,255,0.3); }
+    .ball-trail { position: absolute; left: 50%; transform: translateX(-50%); width: 2px; background: rgba(6,182,212,0.3); top: 0; height: 0; z-index: 5; }
+    @keyframes btn-ripple { 0% { transform: scale(0); opacity: 0.5; } 100% { transform: scale(4); opacity: 0; } }
+    .ripple-circle { position: absolute; border-radius: 50%; background: rgba(255,255,255,0.4); width: 40px; height: 40px; pointer-events: none; animation: btn-ripple 0.6s ease-out forwards; }
+    @keyframes ripple { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(3); opacity: 0; } }
+    .ripple-effect { position: absolute; width: 20px; height: 6px; border: 2px solid rgba(255,255,255,0.6); border-radius: 50%; animation: ripple 0.8s ease-out forwards; }
+    @keyframes bubble-rise { 0% { transform: translateY(0) scale(1); opacity: 0.7; } 100% { transform: translateY(-60px) scale(0.3); opacity: 0; } }
+    @keyframes bubble-rise { 0% { transform: translateY(0) scale(1); opacity: 0.7; } 100% { transform: translateY(-60px) scale(0.3); opacity: 0; } }
+    .bubble { position: absolute; border-radius: 50%; background: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.7); animation: bubble-rise 1.5s ease-out forwards; }
+    @keyframes ripple-fluid { 0% { r: 2; opacity: 0.6; } 100% { r: 25; opacity: 0; } }
+    .ripple-fluid { fill: none; stroke: rgba(6,182,212,0.8); stroke-width: 1; animation: ripple-fluid 0.8s ease-out forwards; }
+    @keyframes ball-highlight { 0%, 100% { filter: drop-shadow(0 0 3px rgba(6,182,212,0.4)); } 50% { filter: drop-shadow(0 0 8px rgba(6,182,212,0.8)); } }
+    .ball-highlight { animation: ball-highlight 1s ease-in-out infinite; }
+    @keyframes glass-shine { 0%, 100% { opacity: 0.1; } 50% { opacity: 0.25; } }
+    .glass-shine { animation: glass-shine 2s ease-in-out infinite; }
+    .stopwatch { font-variant-numeric: tabular-nums; }
+    .btn-hover { transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; }
+    .btn-hover:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(6,182,212,0.25); }
+    .btn-hover:active { transform: translateY(0); }
+    .btn-hover:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .cylinder-container { position: relative; display: flex; align-items: center; justify-content: center; height: 100%; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(241,245,249,0.5); }
+    ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 3px; }
+    @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+    .spinner { animation: spin 2s linear infinite; }
+    @keyframes fade-up { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+    .animate-fade-up { animation: fade-up 0.6s ease forwards; }
+    @keyframes clamp-open-right { 0% { transform: translateX(8px); } 100% { transform: translateX(40px); opacity: 0.3; } }
+    .clamp-opening-left { animation: clamp-open-left 0.5s ease-out forwards; }
+    .clamp-opening-right { animation: clamp-open-right 0.5s ease-out forwards; }
+    @keyframes ball-splash { 0% { transform: scale(0.8); opacity: 0; } 50% { transform: scale(1.15); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+    .ball-splash { animation: ball-splash 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+    .ruler-container { position: absolute; right: -36px; top: 0; bottom: 0; width: 32px; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; }
+    .toast { position: fixed; bottom: 20px; right: 20px; z-index: 200; padding: 12px 20px; border-radius: 12px; background: var(--accent); color: #fff; font-size: 14px; font-weight: 500; transform: translateY(100px); opacity: 0; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none; box-shadow: 0 8px 24px rgba(6,182,212,0.3); }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .modal-overlay { position: fixed; inset: 0; z-index: 150; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; }
+    .modal-overlay.show { display: flex; }
+    .modal-content { background: var(--bg-secondary); border-radius: 16px; padding: 24px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; color: var(--text-primary); box-shadow: 0 20px 64px rgba(0,0,0,0.2); }
+    .guide-step { border-left: 3px solid var(--accent); padding-left: 12px; margin-bottom: 12px; }
+    .progress-bar-container { background: var(--bg-tertiary); border-radius: 8px; padding: 12px 16px; }
+    .progress-track { height: 6px; background: rgba(6,182,212,0.15); border-radius: 3px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-dark)); border-radius: 3px; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+    .progress-step { font-size: 11px; cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: all 0.2s; }
+    .progress-step.active { background: var(--accent); color: #fff; }
+    .progress-step.completed { background: var(--success); color: #fff; }
+    .dashboard-hero { animation: fade-up 0.8s ease forwards; }
+    .dashboard-stat-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+    .dashboard-stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(6,182,212,0.15); }
+    .dashboard-quick-action { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .dashboard-quick-action:hover { transform: translateY(-2px); border-color: var(--accent) !important; }
+    .dashboard-step { transition: all 0.3s ease; background: rgba(6,182,212,0.05); color: var(--text-secondary); border: 1px solid transparent; }
+    .dashboard-step.active { background: var(--accent); color: #fff; }
+    .dashboard-step.completed { background: var(--success); color: #fff; }
+    input[type="text"],input[type="date"],select,textarea { transition: all 0.2s ease; }
+    input[type="text"]:focus,input[type="date"]:focus,select:focus,textarea:focus { outline: none; border-color: var(--accent) !important; box-shadow: 0 0 0 3px rgba(6,182,212,0.1); }
+    select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23334155' d='M1 4l5 5 5-5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; padding-right: 28px; }
+    table { border-collapse: collapse; width: 100%; }
+    table th { font-weight: 600; text-align: left; padding: 10px; }
+    table td { padding: 10px; }
+    table tbody tr:hover { background: rgba(6,182,212,0.05); }
+    @media (max-width: 768px) {
+      
+      /* OPTIMIZED MOBILE HEADER - 70-80px */
+      header { 
+        padding: 8px 6px !important; 
+        min-height: auto !important; 
+        height: auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 6px !important;
+        align-items: stretch !important;
+        justify-content: flex-start !important;
+      }
+      header > div:first-child {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 8px !important;
+        flex-wrap: nowrap !important;
+      }
+      header h1 { 
+        font-size: 26px !important; 
+        line-height: 1.2 !important;
+        word-wrap: break-word !important;
+        max-width: 160px !important;
+        flex-shrink: 0 !important;
+        margin: 0 !important;
+      }
+      header i[data-lucide="flask-conical"] {
+        width: 20px !important;
+        height: 20px !important;
+        flex-shrink: 0 !important;
+      }
+      header select { 
+        font-size: 11px !important; 
+        padding: 6px 8px !important;
+        height: 32px !important;
+        flex-shrink: 0 !important;
+        white-space: nowrap !important;
+        min-width: 120px !important;
+      }
+      header .flex.items-center.gap-2 { 
+        display: flex !important;
+        gap: 6px !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        width: 100% !important;
+        flex-wrap: nowrap !important;
+      }
+      header button { 
+        padding: 6px !important; 
+        width: 32px !important; 
+        height: 32px !important;
+        flex-shrink: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+      }
+      header span[data-template-id="lab-badge"] {
+        display: none !important;
+      }
+      /* MOBILE GRID NAV - 2 ROWS × 4 COLUMNS */
+      nav { 
+        display: grid !important; 
+        grid-template-columns: repeat(4, 1fr) !important; 
+        grid-template-rows: auto auto !important; 
+        gap: 6px !important; 
+        padding: 8px !important; 
+        width: 100% !important; 
+        max-height: none !important; 
+        overflow-x: visible !important; 
+        overflow-y: visible !important; 
+        flex-wrap: nowrap !important;
+        background: var(--nav-bg) !important;
+      }
+      .tab-btn { 
+        padding: 10px 4px !important; 
+        height: 42px !important; 
+        min-width: auto !important; 
+        font-size: 9px !important; 
+        line-height: 1.2 !important; 
+        display: flex !important; 
+        flex-direction: column !important; 
+        align-items: center !important; 
+        justify-content: center !important; 
+        gap: 2px !important; 
+        text-align: center !important; 
+        white-space: normal !important; 
+        word-break: break-word !important;
+        border-radius: 8px !important;
+      }
+      /* MOBILE SIMULASI - RESTORED FULL LAYOUT */
+      #panel-simulasi { 
+        flex-direction: column; 
+        gap: 0; 
+        padding: 0; 
+        width: 100%; 
+        height: auto !important;
+        display: flex; 
+        flex-direction: column;
+        min-h-0;
+        overflow-y: auto;
+      }
+      /* PROGRESS BAR - COMPACT */
+      #panel-simulasi > .progress-bar-container { 
+        margin: 4px 8px 6px 8px; 
+        flex-shrink: 0; 
+        height: auto; 
+        padding: 6px !important;
+      }
+      /* MAIN GRID - RESTORE DESKTOP LAYOUT */
+      #panel-simulasi > .grid { 
+        display: grid;
+        grid-template-columns: 1fr !important;
+        grid-template-rows: auto;
+        gap: 12px !important;
+        width: 100%;
+        height: auto;
+        padding: 0 8px 8px 8px;
+        margin: 0;
+      }
+      /* SIMULATION AREA - FULL WIDTH */
+      #panel-simulasi .lg\:col-span-2 { 
+        width: 100%;
+        height: auto;
+        min-height: 240px;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0;
+        margin: 0;
+        border: none;
+        background: transparent;
+      }
+      #stopwatch-display { 
+        margin-bottom: 8px; 
+        font-size: 12px; 
+        padding: 4px 6px;
+        text-align: center;
+      }
+      .cylinder-container { 
+        height: 180px;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #cylinder-svg { 
+        height: 100%; 
+        width: auto;
+        max-width: 100%;
+      }
+      /* INDICATORS CARD */
+      #panel-simulasi .lg\:col-span-2 .absolute.bottom-2.left-2 { 
+        position: static !important;
+        bottom: auto !important;
+        left: auto !important;
+        width: 100%;
+        margin: 6px 0 0 0;
+        padding: 8px;
+        font-size: 11px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        justify-content: flex-start;
+        line-height: 1.3;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+      }
+      /* CONTROL PANEL - FULL WIDTH */
+      #panel-simulasi .lg\:col-span-1:first-of-type { 
+        width: 100%; 
+        margin: 0; 
+        padding: 12px;
+        height: auto;
+        max-height: none;
+        overflow-y: visible;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      #panel-simulasi .lg\:col-span-1:first-of-type h2 {
+        font-size: 14px;
+        margin: 0;
+        padding: 0;
+        background: none;
+        border: none;
+        border-radius: 0;
+        cursor: default;
+        user-select: none;
+        color: var(--text-primary);
+        font-weight: 600;
+        display: block;
+      }
+      #panel-simulasi .lg\:col-span-1:first-of-type h2::after {
+        display: none;
+      }
+      #panel-simulasi .lg\:col-span-1:first-of-type > div:not(h2) {
+        display: contents;
+      }
+      #panel-simulasi .lg\:col-span-1:first-of-type .flex.flex-col.gap-3 { 
+        display: grid; 
+        grid-template-columns: 1fr 1fr; 
+        gap: 8px; 
+        width: 100%; 
+      }
+      #panel-simulasi .lg\:col-span-1:first-of-type select { 
+        font-size: 11px; 
+        padding: 6px 8px;
+        height: 32px;
+      }
+      #panel-simulasi .lg\:col-span-1:first-of-type .flex.flex-wrap.gap-2 { 
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px; 
+        width: 100%;
+      }
+      #panel-simulasi .lg\:col-span-1:first-of-type button { 
+        padding: 6px 4px; 
+        font-size: 10px;
+        height: 32px;
+        min-width: auto;
+      }
+      #panel-simulasi .lg\:col-span-1:first-of-type .flex.flex-col.gap-1\.5 { 
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px; 
+        width: 100%;
+      }
+      #panel-simulasi .lg\:col-span-1:first-of-type label { 
+        font-size: 10px;
+      }
+      /* NOTEBOOK CARD - FULL WIDTH */
+      #panel-simulasi .lg\:col-span-1:last-of-type { 
+        width: 100%; 
+        margin: 0; 
+        padding: 12px;
+        height: auto;
+        max-height: none;
+        overflow-y: visible;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      #panel-simulasi .lg\:col-span-1:last-of-type h2 {
+        font-size: 14px;
+        margin: 0;
+        padding: 0;
+        background: none;
+        border: none;
+        border-radius: 0;
+        cursor: default;
+        user-select: none;
+        color: var(--text-primary);
+        font-weight: 600;
+        display: block;
+      }
+      #panel-simulasi .lg\:col-span-1:last-of-type h2::after {
+        display: none;
+      }
+      #panel-simulasi .lg\:col-span-1:last-of-type .notebook-card {
+        padding: 0;
+        margin: 0;
+        background: none;
+        border: none;
+        border-radius: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: none;
+        overflow-y: visible;
+      }
+      #panel-simulasi .lg\:col-span-1:last-of-type .grid { 
+        gap: 4px; 
+        font-size: 10px;
+      }
+      #panel-simulasi .lg\:col-span-1:last-of-type .border-t { 
+        padding-top: 4px; 
+        margin-top: 4px;
+        border-color: var(--border);
+      }
+      /* HISTORY LIST */
+      #panel-simulasi .lg\:col-span-1:last-of-type .flex-1 {
+        max-height: 200px;
+        overflow-y: auto;
+        display: grid;
+        gap: 4px;
+        margin-top: 0;
+      }
+      /* RULER HIDDEN */
+      .ruler-container { display: none !important; }
+      
+      /* ENSURE SVG CYLINDER RENDERS ON MOBILE */
+      #cylinder-svg {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        width: auto !important;
+        height: 280px !important;
+        margin: 0 auto !important;
+        position: relative !important;
+        preserveAspectRatio: xMidYMid meet;
+        max-width: 100%;
+      }
+      /* GENERAL */
+      .tab-panel { gap: 0 !important; }
+      
+      /* ===== MOBILE TAB FIXES (< 768px) ===== */
+      /* LKPD TAB - Mobile display fix */
+      #panel-lkpd.active {
+        display: flex !important;
+        flex-direction: column !important;
+        height: auto !important;
+        width: 100% !important;
+        padding: 12px !important;
+        gap: 12px !important;
+        overflow-y: auto !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        min-height: auto !important;
+        pointer-events: auto !important;
+      }
+      
+      /* GRAFIK TAB - Mobile display fix */
+      #panel-grafik.active {
+        display: flex !important;
+        flex-direction: column !important;
+        height: auto !important;
+        width: 100% !important;
+        padding: 12px !important;
+        gap: 12px !important;
+        overflow-y: auto !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        min-height: auto !important;
+        pointer-events: auto !important;
+      }
+      
+      /* PENGEMBANG TAB - Mobile display fix */
+      #panel-pengembang.active {
+        display: flex !important;
+        flex-direction: column !important;
+        height: auto !important;
+        width: 100% !important;
+        padding: 12px !important;
+        gap: 12px !important;
+        overflow-y: auto !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        min-height: auto !important;
+        pointer-events: auto !important;
+      }
+      
+      /* LKPD TAB MOBILE */
+      #panel-lkpd {
+        height: auto !important;
+      }
+      
+      #panel-lkpd.active h2 {
+        font-size: 18px !important;
+        margin: 12px 0 4px 0 !important;
+        padding: 0 !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        font-weight: 700 !important;
+      }
+      
+      #panel-lkpd.active > p {
+        font-size: 13px !important;
+        margin: 0 0 8px 0 !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        color: var(--text-secondary) !important;
+      }
+      
+      #panel-lkpd.active .grid.grid-cols-1.md\:grid-cols-3 {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+        width: 100% !important;
+      }
+      
+      #panel-lkpd.active label {
+        font-size: 12px !important;
+        margin-bottom: 6px !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        font-weight: 600 !important;
+        color: var(--text-secondary) !important;
+      }
+      
+      #panel-lkpd.active input[type="text"],
+      #panel-lkpd.active input[type="date"],
+      #panel-lkpd.active textarea,
+      #panel-lkpd.active select {
+        font-size: 13px !important;
+        padding: 10px !important;
+        height: auto !important;
+        width: 100% !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 8px !important;
+        background: var(--bg-secondary) !important;
+        color: var(--text-primary) !important;
+      }
+      
+      #panel-lkpd.active textarea {
+        resize: vertical !important;
+        line-height: 1.4 !important;
+      }
+      
+      #panel-lkpd.active .overflow-x-auto {
+        width: 100% !important;
+        display: block !important;
+        overflow-x: auto !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+      }
+      
+      #panel-lkpd.active table {
+        font-size: 11px !important;
+        width: 100% !important;
+        display: table !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        border-collapse: collapse !important;
+      }
+      
+      #panel-lkpd.active th,
+      #panel-lkpd.active td {
+        padding: 8px 6px !important;
+        font-size: 11px !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        border: 1px solid var(--border) !important;
+      }
+      
+      #panel-lkpd.active thead tr {
+        background: var(--bg-tertiary) !important;
+      }
+      
+      #panel-lkpd.active .flex.gap-2.flex-wrap {
+        display: flex !important;
+        gap: 8px !important;
+        flex-wrap: wrap !important;
+        width: 100% !important;
+      }
+      
+      #panel-lkpd.active button {
+        font-size: 13px !important;
+        padding: 10px 16px !important;
+        height: auto !important;
+        display: inline-block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
+      }
+      
+      #panel-lkpd.active #save-status {
+        visibility: visible !important;
+        opacity: 1 !important;
+      }
+      
+      /* GRAFIK TAB MOBILE */
+      #panel-grafik.active {
+        height: 100% !important;
+      }
+      
+      #panel-grafik.active h2 {
+        font-size: 18px !important;
+        margin: 0 0 4px 0 !important;
+        padding: 0 !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        font-weight: 700 !important;
+      }
+      
+      #panel-grafik.active > p {
+        font-size: 13px !important;
+        margin: 4px 0 12px 0 !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        color: var(--text-muted) !important;
+      }
+      
+      #panel-grafik.active .glass-panel {
+        display: block !important;
+        width: 100% !important;
+        padding: 12px !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 12px !important;
+      }
+      
+      #panel-grafik.active .glass-panel h3 {
+        font-size: 14px !important;
+        margin: 0 0 10px 0 !important;
+        font-weight: 600 !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+      }
+      
+      #panel-grafik.active .flex.flex-wrap.gap-2 {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+        margin-bottom: 10px !important;
+      }
+      
+      #panel-grafik.active button {
+        font-size: 12px !important;
+        padding: 8px 12px !important;
+        height: auto !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        white-space: nowrap !important;
+      }
+      
+      #panel-grafik.active #comparison-result {
+        display: block !important;
+        width: 100% !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        margin-top: 10px !important;
+        overflow-x: auto !important;
+      }
+      
+      #panel-grafik.active #comparison-table {
+        font-size: 11px !important;
+        width: 100% !important;
+        display: table !important;
+      }
+      
+      #panel-grafik.active #comparison-table th,
+      #panel-grafik.active #comparison-table td {
+        padding: 8px 6px !important;
+        font-size: 11px !important;
+        border: 1px solid var(--border) !important;
+      }
+      
+      #panel-grafik.active .grid.grid-cols-1.lg\:grid-cols-3 {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+        width: 100% !important;
+      }
+      
+      #panel-grafik.active canvas {
+        display: block !important;
+        width: 100% !important;
+        height: 220px !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+      }
+      
+      #panel-grafik.active #grafik-empty {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        font-size: 13px !important;
+      }
+      
+      #panel-grafik.active .space-y-3 {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 12px !important;
+      }
+      
+      #panel-grafik.active textarea {
+        font-size: 12px !important;
+        padding: 10px !important;
+        width: 100% !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 8px !important;
+        background: var(--bg-secondary) !important;
+        color: var(--text-primary) !important;
+        resize: vertical !important;
+      }
+      
+      /* PENGEMBANG TAB MOBILE */
+      #panel-pengembang.active {
+        height: 100% !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        text-align: center !important;
+      }
+      
+      #panel-pengembang.active img {
+        width: 100px !important;
+        height: 100px !important;
+        border-radius: 50% !important;
+        object-fit: cover !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        margin: 0 auto !important;
+        border: 4px solid var(--accent) !important;
+      }
+      
+      #panel-pengembang.active h2 {
+        font-size: 18px !important;
+        margin: 12px 0 4px 0 !important;
+        padding: 0 !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        font-weight: 700 !important;
+      }
+      
+      #panel-pengembang.active p {
+        font-size: 12px !important;
+        margin: 4px 0 !important;
+        max-width: 95% !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        color: var(--text-secondary) !important;
+      }
+      
+      #panel-pengembang.active .glass-panel {
+        width: 95% !important;
+        max-width: 320px !important;
+        display: block !important;
+        padding: 12px !important;
+        text-align: center !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 12px !important;
+        margin: 0 auto !important;
+      }
+      
+      #panel-pengembang.active .space-y-1 {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 6px !important;
+      }
+      
+      #panel-pengembang.active .space-y-1 p {
+        font-size: 11px !important;
+        margin: 0 !important;
+      }
+      
+      /* ===== MOBILE SIMULASI TAB REPAIRED ===== */
+      #panel-simulasi {
+        flex-direction: column !important;
+        gap: 12px !important;
+        padding: 8px !important;
+        width: 100% !important;
+        height: 100% !important;
+        overflow-y: auto !important;
+        display: flex !important;
+      }
+      
+      /* Progress Bar - Order 1 */
+      #panel-simulasi > .progress-bar-container { 
+        order: 1 !important;
+        flex-shrink: 0 !important;
+        margin: 0 !important;
+        padding: 8px !important;
+        background: var(--card-bg) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 12px !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        width: 100% !important;
+        height: auto !important;
+      }
+      
+      /* Main Grid (4 columns desktop → vertical stack mobile) - Order 2 */
+      #panel-simulasi > .grid {
+        order: 2 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 12px !important;
+        width: 100% !important;
+        height: auto !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      
+      /* ===== SIMULATION AREA (lg:col-span-2) - Order FIRST in grid ===== */
+      #panel-simulasi .lg\:col-span-2 {
+        order: 1 !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 520px !important;
+        padding: 12px !important;
+        background: var(--card-bg) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 12px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 8px !important;
+        margin: 0 !important;
+        flex-shrink: 0 !important;
+        overflow: visible !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: relative !important;
+      }
+      
+      /* Stopwatch Display */
+      #stopwatch-display {
+        flex-shrink: 0 !important;
+        margin: 0 !important;
+        padding: 4px 8px !important;
+        font-size: 14px !important;
+        font-weight: bold !important;
+        text-align: center !important;
+        border-radius: 6px !important;
+        background: rgba(15,23,42,0.9) !important;
+        color: #cffafe !important;
+        width: auto !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+      }
+      
+      /* Cylinder Container */
+      .cylinder-container {
+        width: 100% !important;
+        height: 280px !important;
+        flex-shrink: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        overflow: visible !important;
+        position: relative !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+      }
+      
+      /* SVG Cylinder - CRITICAL: No clipping, full render */
+      #cylinder-svg {
+        width: 100% !important;
+        height: 100% !important;
+        display: block !important;
+        position: relative !important;
+        margin: 0 auto !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        overflow: visible !important;
+        max-width: 100% !important;
+      }
+      
+      /* Indicators Card (Moved Below Cylinder) */
+      #panel-simulasi .lg\:col-span-2 .absolute.bottom-2.left-2 {
+        position: static !important;
+        bottom: auto !important;
+        left: auto !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 6px !important;
+        font-size: 11px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 2px !important;
+        justify-content: center !important;
+        line-height: 1.3 !important;
+        text-align: center !important;
+        background: transparent !important;
+        border: none !important;
+        border-radius: 0 !important;
+        flex-shrink: 0 !important;
+        z-index: 20 !important;
+        color: var(--accent) !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+      }
+      
+      /* ===== CONTROL PANEL (lg:col-span-1:first-of-type) - Order 2 ===== */
+      #panel-simulasi .lg\:col-span-1:first-of-type {
+        order: 2 !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        height: auto !important;
+        max-height: none !important;
+        background: var(--card-bg) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 12px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0 !important;
+        overflow: hidden !important;
+        flex-shrink: 0 !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+      }
+      
+      #panel-simulasi .lg\:col-span-1:first-of-type h2 {
+        font-size: 13px !important;
+        margin: 0 !important;
+        padding: 10px 12px !important;
+        background: rgba(6,182,212,0.1) !important;
+        border: none !important;
+        border-radius: 0 !important;
+        cursor: pointer !important;
+        user-select: none !important;
+        color: var(--text-primary) !important;
+        font-weight: 600 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        transition: background 0.2s ease !important;
+      }
+      
+      #panel-simulasi .lg\:col-span-1:first-of-type h2:hover {
+        background: rgba(6,182,212,0.15) !important;
+      }
+      
+      #panel-simulasi .lg\:col-span-1:first-of-type h2::after {
+        content: '▼' !important;
+        font-size: 11px !important;
+        margin-left: 6px !important;
+        transition: transform 0.2s ease !important;
+        display: inline-block !important;
+      }
+      
+      #panel-simulasi .lg\:col-span-1:first-of-type h2.collapsed::after {
+        transform: rotate(-90deg) !important;
+      }
+      
+      #panel-simulasi .lg\:col-span-1:first-of-type > div {
+        max-height: 500px !important;
+        overflow-y: auto !important;
+        padding: 10px !important;
+        transition: max-height 0.3s ease, padding 0.3s ease, margin 0.3s ease !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 6px !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+      }
+      
+      #panel-simulasi .lg\:col-span-1:first-of-type > div.collapsed {
+        max-height: 0 !important;
+        padding: 0 10px !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+      }
+      
+      #panel-simulasi .lg\:col-span-1:first-of-type .flex.flex-col.gap-3 {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 6px !important;
+        width: 100% !important;
+      }
+      
+      #panel-simulasi .lg\:col-span-1:first-of-type select {
+        font-size: 10px !important;
+        padding: 5px 6px !important;
+        height: 30px !important;
+      }
+      
+      #panel-simulasi .lg\:col-span-1:first-of-type .flex.flex-wrap.gap-2 {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 5px !important;
+        width: 100% !important;
+      }
+      
+      #panel-simulasi .lg\:col-span-1:first-of-type button {
+        padding: 6px 4px !important;
+        font-size: 10px !important;
+        height: 32px !important;
+        min-width: auto !important;
+      }
+      
+      #panel-simulasi .lg\:col-span-1:first-of-type .flex.flex-col.gap-1\.5 {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 5px !important;
+        width: 100% !important;
+      }
+      
+      #panel-simulasi .lg\:col-span-1:first-of-type label {
+        font-size: 10px !important;
+      }
+      
+      /* ===== NOTEBOOK CARD (lg:col-span-1:last-of-type) - Order 3 ===== */
+      #panel-simulasi .lg\:col-span-1:last-of-type {
+        order: 3 !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        height: auto !important;
+        max-height: none !important;
+        background: var(--card-bg) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 12px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0 !important;
+        overflow: hidden !important;
+        flex-shrink: 0 !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+      }
+      
+      #panel-simulasi .lg\:col-span-1:last-of-type h2 {
+        font-size: 13px !important;
+        margin: 0 !important;
+        padding: 10px 12px !important;
+        background: rgba(6,182,212,0.1) !important;
+        border: none !important;
+        border-radius: 0 !important;
+        cursor: pointer !important;
+        user-select: none !important;
+        color: var(--text-primary) !important;
+        font-weight: 600 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        transition: background 0.2s ease !important;
+      }
+      
+      #panel-simulasi .lg\:col-span-1:last-of-type h2:hover {
+        background: rgba(6,182,212,0.15) !important;
+      }
+      
+      #panel-simulasi .lg\:col-span-1:last-of-type h2::after {
+        content: '▼' !important;
+        font-size: 11px !important;
+        margin-left: 6px !important;
+        transition: transform 0.2s ease !important;
+        display: inline-block !important;
+      }
+      
+      #panel-simulasi .lg\:col-span-1:last-of-type h2.collapsed::after {
+        transform: rotate(-90deg) !important;
+      }
+      
+      #panel-simulasi .lg\:col-span-1:last-of-type > .notebook-card {
+        max-height: 500px !important;
+        overflow-y: auto !important;
+        padding: 10px !important;
+        transition: max-height 0.3s ease, padding 0.3s ease, margin 0.3s ease !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 6px !important;
+        background: none !important;
+        border: none !important;
+        border-radius: 0 !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+      }
+      
+      #panel-simulasi .lg\:col-span-1:last-of-type > .notebook-card.collapsed {
+        max-height: 0 !important;
+        padding: 0 10px !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+      }
+      
+      #panel-simulasi .lg\:col-span-1:last-of-type .grid {
+        gap: 3px !important;
+        font-size: 10px !important;
+      }
+      
+      #panel-simulasi .lg\:col-span-1:last-of-type .border-t {
+        padding-top: 3px !important;
+        margin-top: 3px !important;
+        border-color: var(--border) !important;
+      }
+      
+      #panel-simulasi .lg\:col-span-1:last-of-type .flex-1 {
+        max-height: 150px !important;
+        overflow-y: auto !important;
+        display: grid !important;
+        gap: 3px !important;
+        margin-top: 0 !important;
+      }
+    }
+  </style>
+  <script src="/_sdk/0179d719c431a79e.data_sdk.js" type="text/javascript" integrity="sha512-OsRvJkI5GkC3MJQcgotQYotpzrMSX415GiKKgvYdxQEEkzD/fdchShO2FMSy0PJr/tiINMXOk5Vl2zAgg6bUiA=="></script>
+  <script src="/_sdk/0b3af1c300e720aa.resizing_sdk.js" type="text/javascript" integrity="sha512-nX1P6oXZmEY5wCI2lUVg3BwKu1cr0yi+ZpXgZ0Yn90vkSwvpmyzBMvOyD6VLJUtBwFI2dSrw1b6OvORxSggw3w=="></script>
+ </head>
+ <body data-template-id="__page-root" class="app-root" style="background: linear-gradient(135deg, rgb(224, 244, 255), rgb(240, 249, 255));">
+  <div class="toast" id="toast"></div><!-- MODAL: Reset -->
+  <div class="modal-overlay" id="modal-reset">
+   <div class="modal-content">
+    <h3 class="font-bold text-lg mb-3">Konfirmasi Reset</h3>
+    <p class="text-sm mb-4" style="color:var(--text-secondary)">Apakah Anda yakin ingin mereset semua data eksperimen?</p>
+    <div class="flex gap-2 justify-end"><button class="px-4 py-2 rounded-lg text-sm font-medium bg-gray-200 text-gray-700 btn-hover" onclick="closeModal('modal-reset')">Batal</button> <button class="px-4 py-2 rounded-lg text-sm font-medium bg-red-500 text-white btn-hover" onclick="confirmReset()">Ya, Reset</button>
+    </div>
+   </div>
+  </div><!-- MODAL: Panduan -->
+  <div class="modal-overlay" id="modal-panduan">
+   <div class="modal-content">
+    <div class="flex justify-between items-center mb-4">
+     <h3 data-template-id="panduan-title" class="canva-text font-bold text-lg" style="color: rgb(15, 23, 42); font-weight: 700; font-style: normal; font-size: 18px;">📖 Panduan Praktikum</h3><button onclick="closeModal('modal-panduan')" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <div class="space-y-3 text-sm" style="color:var(--text-secondary)">
+     <div class="guide-step">
+      <strong>1. Pilih Mode</strong><br>
+       Guru (demonstrasi) atau Praktikum (mandiri)
+     </div>
+     <div class="guide-step">
+      <strong>2. Dashboard</strong><br>
+       Lihat ringkasan dan mulai eksperimen
+     </div>
+     <div class="guide-step">
+      <strong>3. Teori</strong><br>
+       Pelajari konsep viskositas dan Hukum Stokes
+     </div>
+     <div class="guide-step">
+      <strong>4. Prosedur</strong><br>
+       Pahami alat, bahan, dan langkah kerja
+     </div>
+     <div class="guide-step">
+      <strong>5. Praktikum</strong><br>
+       Jalankan simulasi bola jatuh dalam fluida
+     </div>
+     <div class="guide-step">
+      <strong>6. LKPD</strong><br>
+       Catat data, analisis, dan simpulkan
+     </div>
+     <div class="guide-step">
+      <strong>7. Grafik</strong><br>
+       Visualisasi data dengan Chart.js
+     </div>
+    </div>
+   </div>
+  </div><!-- SPLASH -->
+  <div id="splash"><img data-template-id="splash-bg" class="canva-image absolute inset-0 w-full h-full object-cover" loading="lazy" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjEEtc8Yv9zCBPkdwMr4t8SDeqlx-ACXA8X8Xsf1Ok-yagM41kbcmhDy4q9M-vMA3pf3anknxa1lSm-N95f3fsCOgDjvxkrY7XMKDOG2Io1z_AoprVWv47QMAGqr5lmxd87iekxwDlAoJ-Hrn2ajkW8r-UFj48GST4WE0MTejm7So2V0dmTwBxCUVwHowo/s1672/splash.png" alt="Lab Virtual Interaktif - Viskositas Fluida">
+   <div class="splash-overlay"></div>
+   <div class="splash-content-group">
+    <div class="splash-button-wrapper" style="margin-top: 8rem;">
+     <div id="splash-loading" class="flex flex-col items-center gap-3 hidden">
+      <svg class="spinner" width="40" height="40" viewBox="0 0 40 40">
+       <circle cx="20" cy="20" r="3" fill="#06b6d4"></circle><circle cx="20" cy="20" r="10" fill="none" stroke="#06b6d4" stroke-width="2" opacity="0.5"></circle>
+      </svg>
+      <p class="text-cyan-200 text-sm">Memuat...</p>
+     </div><button data-template-id="splash-btn" class="canva-button px-10 py-4 rounded-2xl text-lg font-bold btn-hover shadow-xl" onclick="startApp()" style="background: rgb(6, 182, 212); color: rgb(255, 255, 255); font-weight: 700; font-style: normal; font-size: 18px;">🚀 Mulai Praktikum</button>
+    </div>
+   </div>
+  </div><!-- HEADER -->
+  <header data-template-id="header-bar" class="canva-header flex items-center justify-between px-5 py-2.5 shrink-0" style="background: rgba(15, 23, 42, 0.92);">
+   <div class="flex items-center gap-3"><i data-lucide="flask-conical" class="w-5 h-5 text-cyan-400"></i>
+    <h1 data-template-id="lab-title" class="canva-text font-bold" style="color: rgb(103, 232, 249); font-weight: 700; font-style: normal; font-size: 32px;">Lab Maya: Viskositas Fluida</h1>
+   </div>
+   <div class="flex items-center gap-2"><select id="mode-select" class="text-xs rounded-lg px-2 py-1 bg-slate-700 text-cyan-200 border border-cyan-600 font-medium" onchange="switchMode()"> <option value="praktikum">Mode Praktikum</option> <option value="guru">Mode Guru</option> </select> <button class="p-1.5 rounded-lg bg-slate-700/50 text-cyan-300 hover:bg-slate-600" onclick="openModal('modal-panduan')" title="Panduan"><i data-lucide="book-open" class="w-4 h-4"></i></button> <button class="p-1.5 rounded-lg bg-slate-700/50 text-cyan-300 hover:bg-slate-600" onclick="toggleAudio()" title="Audio" id="audio-btn"><i data-lucide="volume-2" class="w-4 h-4"></i></button> <button class="p-1.5 rounded-lg bg-slate-700/50 text-cyan-300 hover:bg-slate-600" onclick="toggleDark()" title="Dark Mode"><i data-lucide="moon" class="w-4 h-4"></i></button> <button class="p-1.5 rounded-lg bg-slate-700/50 text-cyan-300 hover:bg-slate-600" onclick="toggleFullscreen()" title="Fullscreen"><i data-lucide="maximize" class="w-4 h-4"></i></button> <span data-template-id="lab-badge" class="canva-tag text-xs px-2 py-0.5 rounded-full" style="background: rgba(6, 182, 212, 0.2); color: rgb(165, 243, 252); font-weight: 400; font-style: normal; font-size: 12px;">Fase F · SMA</span>
+   </div>
+  </header><!-- NAV -->
+  <nav class="flex gap-1.5 px-5 py-2 shrink-0 overflow-x-auto" style="background:var(--nav-bg)" role="tablist"><button class="tab-btn active px-3 py-1.5 rounded-lg text-xs font-medium" data-tab="dashboard" role="tab" aria-selected="true">🏠 Beranda</button> <button class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-700 text-slate-300" data-tab="panduan" role="tab">📖 Panduan</button> <button class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-700 text-slate-300" data-tab="teori" role="tab">📚 Teori</button> <button class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-700 text-slate-300" data-tab="prosedur" role="tab">📋 Prosedur</button> <button class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-700 text-slate-300" data-tab="simulasi" role="tab">🧪 Simulasi</button> <button class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-700 text-slate-300" data-tab="lkpd" role="tab">📝 LKPD</button> <button class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-700 text-slate-300" data-tab="grafik" role="tab">📊 Grafik</button> <button class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-700 text-slate-300" data-tab="pengembang" role="tab">👨‍🔬 Pengembang</button>
+  </nav><!-- MAIN -->
+  <main class="flex-1 min-h-0 px-4 py-0 overflow-hidden"><!-- DASHBOARD -->
+   <section class="tab-panel active h-full overflow-y-auto gap-4" id="panel-dashboard" role="tabpanel"><!-- Hero Section with Background Image -->
+    <div class="dashboard-hero glass-panel relative overflow-hidden p-8 md:p-12 mb-3 rounded-3xl shadow-2xl animate-fade-up" style="background:linear-gradient(135deg, rgba(6,182,212,0.15), rgba(34,211,238,0.08)); border:1px solid var(--border);">
+     <div class="absolute inset-0 bg-gradient-to-r from-slate-900/60 to-slate-800/40"></div>
+     <div class="relative z-10">
+      <h1 data-template-id="dashboard-hero-title" class="canva-text text-3xl md:text-5xl font-bold mb-3" style="color: rgb(255, 255, 255); text-shadow: rgba(0, 0, 0, 0.3) 0px 2px 8px; font-weight: 400; font-style: normal; font-size: 32px;">LABORATORIUM MAYA
+VISKOSITAS FLUIDA</h1>
+      <p data-template-id="dashboard-hero-subtitle" class="canva-text text-lg md:text-2xl font-semibold mb-2" style="color: rgb(207, 250, 254); font-weight: 400; font-style: normal; font-size: 16px;">Metode Bola Jatuh (Hukum Stokes)</p>
+      <p data-template-id="dashboard-hero-desc" class="canva-text text-sm md:text-base leading-relaxed mb-6 max-w-3xl" style="color: rgb(224, 242, 254); font-weight: 400; font-style: normal; font-size: 16px;">Selamat datang di Laboratorium Maya Viskositas Fluida. Lakukan eksperimen virtual untuk memahami hubungan viskositas fluida terhadap kecepatan gerak bola menggunakan Metode Bola Jatuh dan Hukum Stokes.</p>
+      <div class="flex flex-wrap gap-3"><button class="btn-hover px-7 py-3.5 rounded-xl font-semibold text-white text-sm shadow-lg hover:shadow-2xl" style="background:var(--accent);transition:all 0.3s ease" onclick="switchTab('simulasi')">▶ Mulai Praktikum</button> <button class="btn-hover px-7 py-3.5 rounded-xl font-semibold text-white text-sm shadow-lg hover:shadow-2xl" style="background:rgba(139,92,246,0.9);transition:all 0.3s ease" onclick="switchTab('panduan')">📖 Baca Panduan</button>
+      </div>
+     </div>
+    </div><!-- Summary Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6"><!-- Current Fluid -->
+     <div class="glass-panel p-5 rounded-2xl shadow-lg animate-fade-up" style="border:1px solid var(--border);animation-delay:50ms;">
+      <div class="flex items-center justify-between mb-2"><span class="text-2xl">🧪</span> <span class="text-xs font-bold px-2.5 py-1 rounded-full" style="background:rgba(6,182,212,0.2);color:var(--accent)">Fluida</span>
+      </div>
+      <p class="text-xs font-semibold" style="color:var(--text-muted)">Fluida Terpilih</p>
+      <p class="text-lg font-bold mt-1" style="color:var(--accent)" id="dash-fluida">—</p>
+     </div><!-- Ball Type -->
+     <div class="glass-panel p-5 rounded-2xl shadow-lg animate-fade-up" style="border:1px solid var(--border);animation-delay:100ms;">
+      <div class="flex items-center justify-between mb-2"><span class="text-2xl">⚪</span> <span class="text-xs font-bold px-2.5 py-1 rounded-full" style="background:rgba(139,92,246,0.2);color:#8b5cf6">Bola</span>
+      </div>
+      <p class="text-xs font-semibold" style="color:var(--text-muted)">Material Bola</p>
+      <p class="text-lg font-bold mt-1" style="color:#8b5cf6" id="dash-bola">—</p>
+     </div><!-- Ball Diameter -->
+     <div class="glass-panel p-5 rounded-2xl shadow-lg animate-fade-up" style="border:1px solid var(--border);animation-delay:150ms;">
+      <div class="flex items-center justify-between mb-2"><span class="text-2xl">📏</span> <span class="text-xs font-bold px-2.5 py-1 rounded-full" style="background:rgba(245,158,11,0.2);color:#f59e0b">Ukuran</span>
+      </div>
+      <p class="text-xs font-semibold" style="color:var(--text-muted)">Diameter Bola</p>
+      <p class="text-lg font-bold mt-1" style="color:#f59e0b" id="dash-diameter">—</p>
+     </div><!-- Measuring Glass -->
+     <div class="glass-panel p-5 rounded-2xl shadow-lg animate-fade-up" style="border:1px solid var(--border);animation-delay:200ms;">
+      <div class="flex items-center justify-between mb-2"><span class="text-2xl">🥛</span> <span class="text-xs font-bold px-2.5 py-1 rounded-full" style="background:rgba(16,185,129,0.2);color:#10b981">Kapasitas</span>
+      </div>
+      <p class="text-xs font-semibold" style="color:var(--text-muted)">Gelas Ukur</p>
+      <p class="text-lg font-bold mt-1" style="color:#10b981" id="dash-gelas">—</p>
+     </div><!-- Practice Status -->
+     <div class="glass-panel p-5 rounded-2xl shadow-lg animate-fade-up" style="border:1px solid var(--border);animation-delay:250ms;">
+      <div class="flex items-center justify-between mb-2"><span class="text-2xl">📊</span> <span class="text-xs font-bold px-2.5 py-1 rounded-full" style="background:rgba(236,72,153,0.2);color:#ec4899">Status</span>
+      </div>
+      <p class="text-xs font-semibold" style="color:var(--text-muted)">Praktikum</p>
+      <p class="text-lg font-bold mt-1" style="color:#ec4899" id="dash-status">Siap</p>
+     </div>
+    </div><!-- Progress Section -->
+    <div class="glass-panel p-6 rounded-2xl mb-6 shadow-lg animate-fade-up" style="border:1px solid var(--border);animation-delay:300ms;">
+     <h3 class="font-bold text-sm mb-4 flex items-center gap-2" style="color:var(--text-primary)"><span style="color:var(--accent)">📈</span> Progress Pembelajaran</h3>
+     <div class="flex items-center justify-between mb-3"><span class="text-xs font-semibold" style="color:var(--text-muted)" id="dashboard-progress-label">Tahap 1 dari 6</span> <span class="text-xs font-semibold" id="dashboard-progress-percent" style="color:var(--accent)">16%</span>
+     </div>
+     <div class="progress-track rounded-full h-3 mb-4">
+      <div class="progress-fill rounded-full" id="dashboard-progress-bar" style="width:16%; height:100%;"></div>
+     </div>
+     <div class="grid grid-cols-3 md:grid-cols-6 gap-2">
+      <div class="dashboard-step active p-2.5 rounded-xl text-center text-xs font-semibold cursor-pointer transition-all" data-step="1" onclick="updateDashboardProgress(1)">
+       ① Persiapan
+      </div>
+      <div class="dashboard-step p-2.5 rounded-xl text-center text-xs font-semibold cursor-pointer transition-all" data-step="2" onclick="updateDashboardProgress(2)">
+       ② Fluida
+      </div>
+      <div class="dashboard-step p-2.5 rounded-xl text-center text-xs font-semibold cursor-pointer transition-all" data-step="3" onclick="updateDashboardProgress(3)">
+       ③ Bola
+      </div>
+      <div class="dashboard-step p-2.5 rounded-xl text-center text-xs font-semibold cursor-pointer transition-all" data-step="4" onclick="updateDashboardProgress(4)">
+       ④ Simulasi
+      </div>
+      <div class="dashboard-step p-2.5 rounded-xl text-center text-xs font-semibold cursor-pointer transition-all" data-step="5" onclick="updateDashboardProgress(5)">
+       ⑤ Analisis
+      </div>
+      <div class="dashboard-step p-2.5 rounded-xl text-center text-xs font-semibold cursor-pointer transition-all" data-step="6" onclick="updateDashboardProgress(6)">
+       ⑥ Simpulan
+      </div>
+     </div>
+    </div><!-- Quick Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"><button class="dashboard-quick-action glass-panel p-5 rounded-2xl text-left btn-hover flex items-start gap-4 shadow-lg animate-fade-up" onclick="switchTab('simulasi')" style="border:1px solid var(--border);animation-delay:350ms;"> <i data-lucide="play-circle" class="w-8 h-8 mt-0.5 flex-shrink-0" style="color:var(--accent);stroke-width:1.5"></i>
+      <div>
+       <p class="font-bold text-sm" style="color:var(--text-primary)">Mulai Praktikum</p>
+       <p class="text-xs mt-1" style="color:var(--text-muted)">Jalankan simulasi bola jatuh</p>
+      </div></button> <button class="dashboard-quick-action glass-panel p-5 rounded-2xl text-left btn-hover flex items-start gap-4 shadow-lg animate-fade-up" onclick="switchTab('teori')" style="border:1px solid var(--border);animation-delay:400ms;"> <i data-lucide="book-open" class="w-8 h-8 mt-0.5 flex-shrink-0" style="color:#8b5cf6;stroke-width:1.5"></i>
+      <div>
+       <p class="font-bold text-sm" style="color:var(--text-primary)">Teori Viskositas</p>
+       <p class="text-xs mt-1" style="color:var(--text-muted)">Pelajari konsep Hukum Stokes</p>
+      </div></button> <button class="dashboard-quick-action glass-panel p-5 rounded-2xl text-left btn-hover flex items-start gap-4 shadow-lg animate-fade-up" onclick="switchTab('lkpd')" style="border:1px solid var(--border);animation-delay:450ms;"> <i data-lucide="clipboard-list" class="w-8 h-8 mt-0.5 flex-shrink-0" style="color:#f59e0b;stroke-width:1.5"></i>
+      <div>
+       <p class="font-bold text-sm" style="color:var(--text-primary)">LKPD</p>
+       <p class="text-xs mt-1" style="color:var(--text-muted)">Catat data pengamatan</p>
+      </div></button>
+    </div><!-- Stats Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+     <div class="dashboard-stat-card glass-panel p-6 rounded-2xl shadow-lg animate-fade-up" style="border:1px solid var(--border);animation-delay:500ms;">
+      <p class="text-xs font-semibold flex items-center gap-1.5" style="color:var(--text-muted)"><i data-lucide="flask-conical" class="w-4 h-4"></i> Total Praktikum</p>
+      <p class="text-4xl font-bold mt-2" style="color:var(--accent);" id="stat-experiments">0</p>
+     </div>
+     <div class="dashboard-stat-card glass-panel p-6 rounded-2xl shadow-lg animate-fade-up" style="border:1px solid var(--border);animation-delay:550ms;">
+      <p class="text-xs font-semibold flex items-center gap-1.5" style="color:var(--text-muted)"><i data-lucide="droplets" class="w-4 h-4"></i> Fluida Diuji</p>
+      <p class="text-4xl font-bold mt-2" style="color:#8b5cf6;" id="stat-fluids">0</p>
+     </div>
+     <div class="dashboard-stat-card glass-panel p-6 rounded-2xl shadow-lg animate-fade-up" style="border:1px solid var(--border);animation-delay:600ms;">
+      <p class="text-xs font-semibold flex items-center gap-1.5" style="color:var(--text-muted)"><i data-lucide="gauge" class="w-4 h-4"></i> Rata-rata η</p>
+      <p class="text-3xl font-bold mt-2" style="color:#f59e0b;" id="stat-avg-eta">—</p>
+     </div>
+    </div><!-- Guru Panel -->
+    <div id="guru-panel" class="glass-panel p-6 hidden rounded-2xl shadow-lg animate-fade-up" style="border:1px solid var(--border);">
+     <h3 class="font-bold mb-4 flex items-center gap-2" style="color:var(--text-primary)"><i data-lucide="database" class="w-5 h-5" style="color:var(--accent)"></i> 📋 Data Ideal (Mode Guru)</h3>
+     <div class="overflow-x-auto">
+      <table class="w-full text-xs">
+       <thead>
+        <tr class="border-b" style="border-color:var(--border)">
+         <th class="py-3 px-3 text-left font-bold" style="color:var(--text-primary)">Fluida</th>
+         <th class="py-3 px-3 text-center font-bold" style="color:var(--text-primary)">η (Pa·s)</th>
+         <th class="py-3 px-3 text-center font-bold" style="color:var(--text-primary)">ρ (kg/m³)</th>
+         <th class="py-3 px-3 text-center font-bold" style="color:var(--text-primary)">v terminal (m/s)</th>
+        </tr>
+       </thead>
+       <tbody id="ideal-data-body"></tbody>
+      </table>
+     </div><button class="mt-4 px-6 py-2.5 rounded-xl text-xs font-medium btn-hover text-white shadow-lg" style="background:var(--accent)" onclick="runDemonstration()">🎬 Demonstrasi Otomatis</button>
+    </div>
+   </section><!-- PANDUAN --> <!-- PANDUAN -->
+   <section class="tab-panel h-full gap-0 flex flex-col" id="panel-panduan" role="tabpanel" style="overflow:hidden;">
+    <!-- Header -->
+    <div class="glass-panel p-4 rounded-xl mb-3 shrink-0" style="background:linear-gradient(135deg, rgba(6,182,212,0.1), rgba(34,211,238,0.05)); border:1px solid var(--border);">
+     <h2 data-template-id="panduan-page-title" class="canva-text font-bold text-lg mb-1" style="color: rgb(15, 23, 42); font-weight: 700; font-style: normal; font-size: 24px;">Panduan Praktikum Virtual</h2>
+    </div><!-- Two-Column Main Content -->
+    <div class="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-2 gap-3 pb-3" style="overflow:hidden;">
+     <!-- LEFT COLUMN: Tujuan & Manfaat -->
+     <div class="flex flex-col gap-3 overflow-y-auto pr-1">
+      <!-- Tujuan Pembelajaran -->
+      <div class="glass-panel p-4 rounded-2xl shadow-lg flex-shrink-0" style="border:1px solid var(--border);">
+       <h3 class="font-bold text-sm mb-3 flex items-center gap-2" style="color:var(--text-primary);"><span style="font-size:18px">🎯</span> Tujuan Pembelajaran</h3>
+       <ul class="space-y-1.5 text-xs" style="color:var(--text-secondary);">
+        <li class="flex gap-2"><span style="color:var(--accent);font-weight:bold">✓</span> <span>Menentukan koefisien viskositas fluida menggunakan metode bola jatuh</span></li>
+        <li class="flex gap-2"><span style="color:var(--accent);font-weight:bold">✓</span> <span>Menganalisis pengaruh jenis fluida terhadap kecepatan terminal bola</span></li>
+        <li class="flex gap-2"><span style="color:var(--accent);font-weight:bold">✓</span> <span>Membandingkan viskositas berbagai fluida</span></li>
+        <li class="flex gap-2"><span style="color:var(--accent);font-weight:bold">✓</span> <span>Menerapkan Hukum Stokes dalam eksperimen virtual</span></li>
+       </ul>
+      </div><!-- Manfaat Praktikum -->
+      <div class="glass-panel p-4 rounded-2xl shadow-lg flex-shrink-0" style="border:1px solid var(--border);">
+       <h3 class="font-bold text-sm mb-3 flex items-center gap-2" style="color:var(--text-primary);"><span style="font-size:18px">💡</span> Manfaat Praktikum</h3>
+       <ul class="space-y-1.5 text-xs" style="color:var(--text-secondary);">
+        <li class="flex gap-2"><span style="color:#10b981;font-weight:bold">✓</span> <span>Memahami konsep viskositas secara visual dan interaktif</span></li>
+        <li class="flex gap-2"><span style="color:#10b981;font-weight:bold">✓</span> <span>Melatih keterampilan pengamatan dan analisis data</span></li>
+        <li class="flex gap-2"><span style="color:#10b981;font-weight:bold">✓</span> <span>Mengembangkan kemampuan berpikir kritis</span></li>
+        <li class="flex gap-2"><span style="color:#10b981;font-weight:bold">✓</span> <span>Menghubungkan teori fisika dengan fenomena kehidupan sehari-hari</span></li>
+       </ul>
+      </div>
+     </div><!-- RIGHT COLUMN: Alat & Stepper -->
+     <div class="flex flex-col gap-3 overflow-y-auto pl-1">
+      <!-- Alat & Bahan Virtual -->
+      <div class="glass-panel p-4 rounded-2xl shadow-lg" style="border:1px solid var(--border);">
+       <h3 class="font-bold text-sm mb-3 flex items-center gap-2" style="color:var(--text-primary);"><span style="font-size:18px">🧪</span> Alat &amp; Bahan Virtual</h3>
+       <div class="grid grid-cols-2 gap-2">
+        <div class="glass-panel p-2 rounded-lg" style="background:rgba(6,182,212,0.08);border:1px solid var(--border);">
+         <img data-template-id="panduan-alat-gelas" class="canva-image w-full h-24 object-cover rounded-lg mb-1.5" loading="lazy" src="https://images.pexels.com/photos/2280571/pexels-photo-2280571.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=800" alt="Scientist in gloves analyzing blue liquid in a laboratory setting with microscope and glassware.">
+         <h4 class="font-semibold text-xs mb-0.5" style="color:var(--text-primary);">📏 Gelas Ukur</h4>
+         <p class="text-xs" style="color:var(--text-muted);">250-1000 mL</p>
+        </div>
+        <div class="glass-panel p-2 rounded-lg" style="background:rgba(139,92,246,0.08);border:1px solid var(--border);">
+         <img data-template-id="panduan-alat-bola" class="canva-image w-full h-24 object-cover rounded-lg mb-1.5" loading="lazy" src="https://images.pexels.com/photos/34792550/pexels-photo-34792550.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=800" alt="Close-up abstract image featuring shiny reflective silver spheres creating a mesmerizing pattern.">
+         <h4 class="font-semibold text-xs mb-0.5" style="color:var(--text-primary);">⚪ Bola</h4>
+         <p class="text-xs" style="color:var(--text-muted);">Baja, Aluminium, Kaca</p>
+        </div>
+        <div class="glass-panel p-2 rounded-lg" style="background:rgba(245,158,11,0.08);border:1px solid var(--border);">
+         <img data-template-id="panduan-alat-fluida" class="canva-image w-full h-24 object-cover rounded-lg mb-1.5" loading="lazy" src="https://images.pexels.com/photos/1022385/pexels-photo-1022385.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=800" alt="High-resolution image of a glass cup filled with olive oil and olives, ideal for culinary themes.">
+         <h4 class="font-semibold text-xs mb-0.5" style="color:var(--text-primary);">💧 Fluida Uji</h4>
+         <p class="text-xs" style="color:var(--text-muted);">Air, Oli, Madu, dll</p>
+        </div>
+        <div class="glass-panel p-2 rounded-lg" style="background:rgba(16,185,129,0.08);border:1px solid var(--border);">
+         <img data-template-id="panduan-alat-stopwatch" class="canva-image w-full h-24 object-cover rounded-lg mb-1.5" loading="lazy" src="https://images.pexels.com/photos/5563414/pexels-photo-5563414.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=800" alt="A detailed shot of a vintage analog stopwatch showing reflection. Perfect for time-related themes.">
+         <h4 class="font-semibold text-xs mb-0.5" style="color:var(--text-primary);">⏱️ Pengukur</h4>
+         <p class="text-xs" style="color:var(--text-muted);">Stopwatch &amp; Penggaris</p>
+        </div>
+       </div>
+      </div><!-- Stepper: Langkah Praktikum -->
+      <div class="glass-panel p-4 rounded-2xl shadow-lg flex-shrink-0" style="border:1px solid var(--border);">
+       <h3 class="font-bold text-sm mb-2 flex items-center gap-2" style="color:var(--text-primary);"><span style="font-size:18px">📋</span> Langkah Praktikum</h3>
+       <div class="space-y-1.5 text-xs" style="color:var(--text-secondary);">
+        <div class="flex gap-2">
+         <div class="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-white" style="background:var(--accent);">
+          1
+         </div>
+         <div><strong style="color:var(--text-primary);">Pilih Fluida</strong><br><span style="font-size:11px">Tentukan jenis fluida uji</span>
+         </div>
+        </div>
+        <div class="flex gap-2">
+         <div class="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-white" style="background:#8b5cf6;">
+          2
+         </div>
+         <div><strong style="color:var(--text-primary);">Pilih Gelas</strong><br><span style="font-size:11px">Tentukan ukuran gelas ukur</span>
+         </div>
+        </div>
+        <div class="flex gap-2">
+         <div class="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-white" style="background:#f59e0b;">
+          3
+         </div>
+         <div><strong style="color:var(--text-primary);">Pilih Bola</strong><br><span style="font-size:11px">Tentukan material &amp; diameter</span>
+         </div>
+        </div>
+        <div class="flex gap-2">
+         <div class="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-white" style="background:#10b981;">
+          4
+         </div>
+         <div><strong style="color:var(--text-primary);">Tentukan Tinggi</strong><br><span style="font-size:11px">Pilih ketinggian lintasan</span>
+         </div>
+        </div>
+        <div class="flex gap-2">
+         <div class="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-white" style="background:#ec4899;">
+          5
+         </div>
+         <div><strong style="color:var(--text-primary);">Mulai Simulasi</strong><br><span style="font-size:11px">Klik "Siapkan" lalu "Mulai"</span>
+         </div>
+        </div>
+        <div class="flex gap-2">
+         <div class="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-white" style="background:#3b82f6;">
+          6
+         </div>
+         <div><strong style="color:var(--text-primary);">Catat Data</strong><br><span style="font-size:11px">Rekam ke LKPD</span>
+         </div>
+        </div>
+       </div>
+      </div>
+     </div>
+    </div><!-- Tips Card at Bottom -->
+    <div class="glass-panel p-4 rounded-2xl shadow-lg shrink-0" style="border:1px solid var(--border);background:linear-gradient(135deg, rgba(139,92,246,0.08), rgba(6,182,212,0.06));">
+     <h3 class="font-bold text-sm mb-2 flex items-center gap-2" style="color:var(--text-primary);"><span style="font-size:18px">⭐</span> Tips Praktikum</h3>
+     <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs" style="color:var(--text-secondary);">
+      <div>
+       💭 <strong>Perhatikan:</strong> Viskositas berbeda untuk setiap fluida
+      </div>
+      <div>
+       🎯 <strong>Amati:</strong> Perbedaan kecepatan terminal bola
+      </div>
+      <div>
+       📊 <strong>Catat:</strong> Waktu dan kecepatan untuk setiap percobaan
+      </div>
+     </div>
+    </div>
+   </section><!-- TEORI -->
+   <section class="tab-panel h-full overflow-y-auto gap-2 pt-0" id="panel-teori" role="tabpanel">
+    <h2 data-template-id="teori-title" class="canva-text font-bold" style="color: rgb(15, 23, 42); font-weight: 700; font-style: normal; font-size: 24px;">Viskositas Fluida</h2>
+    <div class="glass-panel p-4 rounded-xl border-l-4 mb-1" style="border-left-color:#06b6d4;">
+     <p data-template-id="teori-intro" class="canva-text text-sm leading-relaxed" style="color: rgb(12, 74, 110); font-weight: 500; font-style: normal; font-size: 15px;">Sobat belajar, pernahkah kamu bertanya mengapa madu mengalir lebih lambat daripada air? Melalui laboratorium maya ini, kamu akan mengeksplorasi konsep viskositas fluida menggunakan metode bola jatuh (Hukum Stokes).</p>
+    </div><!-- Tujuan Pembelajaran -->
+    <div class="glass-panel p-4 rounded-2xl animate-fade-up shadow-lg" style="border:1px solid var(--border);animation-delay:50ms;">
+     <h3 data-template-id="teori-tujuan-label" class="canva-text font-bold text-base mb-3 flex items-center gap-2" style="color: rgb(12, 74, 110); font-weight: 600; font-style: normal; font-size: 19px;">📚 Tujuan Belajar</h3>
+     <ul class="text-xs leading-relaxed space-y-1.5" style="color:var(--text-secondary)">
+      <li class="flex gap-2"><span style="color:var(--accent);font-weight:bold">✓</span> <span>Memahami konsep viskositas dan pengaruhnya terhadap gerak benda dalam fluida</span></li>
+      <li class="flex gap-2"><span style="color:var(--accent);font-weight:bold">✓</span> <span>Menerapkan Hukum Stokes untuk menghitung kecepatan terminal</span></li>
+      <li class="flex gap-2"><span style="color:var(--accent);font-weight:bold">✓</span> <span>Menganalisis faktor-faktor yang memengaruhi viskositas</span></li>
+     </ul>
+    </div><!-- Definisi -->
+    <div class="glass-panel p-5 rounded-2xl animate-fade-up shadow-lg" style="border:1px solid var(--border);animation-delay:100ms;">
+     <h3 data-template-id="teori-definisi-label" class="canva-text font-bold text-base mb-3 flex items-center gap-2" style="color: rgb(12, 74, 110); font-weight: 600; font-style: normal; font-size: 19px;">🔬 Apa itu Viskositas?</h3>
+     <p data-template-id="teori-def" class="canva-text text-sm leading-relaxed" style="color: rgb(30, 41, 59); font-weight: 400; font-style: normal; font-size: 15px;">Viskositas adalah ukuran kekentalan suatu fluida yang menyatakan besar hambatan fluida terhadap benda yang bergerak di dalamnya. Semakin besar viskositas, semakin sulit benda bergerak dalam fluida tersebut. Satuan SI viskositas adalah Pascal-sekon (Pa·s).</p>
+    </div><!-- Interactive Animation Section -->
+    <div class="glass-panel p-6 rounded-2xl animate-fade-up shadow-lg" style="border: 1px solid var(--border); animation-delay: 150ms; background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(6, 182, 212, 0.06));" data-template-id="dashboard-hero-bg">
+     <h3 class="font-bold text-base mb-4 flex items-center gap-2" style="color:var(--text-primary);"><span style="font-size:20px">⚡</span> Animasi Interaktif: Bola Jatuh dalam Fluida</h3>
+     <div class="grid grid-cols-1 md:grid-cols-3 gap-4"><!-- Water Animation -->
+      <div class="relative flex flex-col items-center justify-center p-4 rounded-xl glass-panel hover:shadow-lg transition-all" style="background:rgba(100,180,255,0.1); border:1px solid rgba(6,182,212,0.3);">
+       <p class="text-xs font-bold mb-3" style="color:var(--text-primary);">💧 Air</p>
+       <svg width="80" height="200" viewBox="0 0 80 200" class="drop-shadow-md" style="background:rgba(100,180,255,0.15); border-radius:8px;"><!-- Cylinder --> <rect x="10" y="10" width="60" height="160" rx="3" fill="rgba(100,180,255,0.2)" stroke="#06b6d4" stroke-width="2"></rect> <!-- Liquid --> <rect x="12" y="90" width="56" height="78" rx="2" fill="rgba(100,180,255,0.3)"></rect> <!-- Animate Ball --> <circle class="teori-ball-anim" cx="40" cy="30" r="5" fill="#52525b" style="animation: teori-fall-fast 2s ease-in infinite; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3))"></circle>
+       </svg>
+       <p class="text-xs mt-2" style="color:var(--text-muted);"><strong style="color:#06b6d4;">η ≈ 0.001 Pa·s</strong></p>
+       <p class="text-xs italic" style="color:var(--text-secondary);">Cepat</p>
+      </div><!-- Oil Animation -->
+      <div class="relative flex flex-col items-center justify-center p-4 rounded-xl glass-panel hover:shadow-lg transition-all" style="background:rgba(200,150,30,0.1); border:1px solid rgba(245,158,11,0.3);">
+       <p class="text-xs font-bold mb-3" style="color:var(--text-primary);">🛢️ Oli</p>
+       <svg width="80" height="200" viewBox="0 0 80 200" class="drop-shadow-md" style="background:rgba(200,150,30,0.15); border-radius:8px;"><!-- Cylinder --> <rect x="10" y="10" width="60" height="160" rx="3" fill="rgba(200,150,30,0.2)" stroke="#f59e0b" stroke-width="2"></rect> <!-- Liquid --> <rect x="12" y="90" width="56" height="78" rx="2" fill="rgba(200,150,30,0.35)"></rect> <!-- Animate Ball --> <circle class="teori-ball-anim" cx="40" cy="30" r="5" fill="#52525b" style="animation: teori-fall-medium 3.5s ease-in infinite; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3))"></circle>
+       </svg>
+       <p class="text-xs mt-2" style="color:var(--text-muted);"><strong style="color:#f59e0b;">η ≈ 0.25 Pa·s</strong></p>
+       <p class="text-xs italic" style="color:var(--text-secondary);">Sedang</p>
+      </div><!-- Honey Animation -->
+      <div class="relative flex flex-col items-center justify-center p-4 rounded-xl glass-panel hover:shadow-lg transition-all" style="background:rgba(220,160,40,0.1); border:1px solid rgba(220,160,40,0.4);">
+       <p class="text-xs font-bold mb-3" style="color:var(--text-primary);">🍯 Madu</p>
+       <svg width="80" height="200" viewBox="0 0 80 200" class="drop-shadow-md" style="background:rgba(220,160,40,0.15); border-radius:8px;"><!-- Cylinder --> <rect x="10" y="10" width="60" height="160" rx="3" fill="rgba(220,160,40,0.2)" stroke="#d97706" stroke-width="2"></rect> <!-- Liquid --> <rect x="12" y="90" width="56" height="78" rx="2" fill="rgba(220,160,40,0.4)"></rect> <!-- Animate Ball --> <circle class="teori-ball-anim" cx="40" cy="30" r="5" fill="#52525b" style="animation: teori-fall-slow 6s ease-in infinite; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3))"></circle>
+       </svg>
+       <p class="text-xs mt-2" style="color:var(--text-muted);"><strong style="color:#d97706;">η ≈ 5.0 Pa·s</strong></p>
+       <p class="text-xs italic" style="color:var(--text-secondary);">Lambat</p>
+      </div>
+     </div>
+     <p class="text-xs italic mt-3" style="color:var(--text-muted);">▶ Tekan tombol play untuk melihat perbedaan kecepatan jatuh bola di berbagai fluida</p>
+    </div><!-- Hukum Stokes & Formula -->
+    <div class="glass-panel p-6 rounded-2xl animate-fade-up shadow-lg" style="border:1px solid var(--border);animation-delay:200ms;background:linear-gradient(135deg, rgba(139,92,246,0.08), rgba(6,182,212,0.06));">
+     <h3 data-template-id="teori-hukum-label" class="canva-text font-bold text-base mb-3 flex items-center gap-2" style="color: rgb(12, 74, 110); font-weight: 600; font-style: normal; font-size: 19px;">⚙️ Hukum Stokes</h3>
+     <p data-template-id="teori-stokes" class="canva-text text-sm leading-relaxed mb-4" style="color: rgb(30, 41, 59); font-weight: 400; font-style: normal; font-size: 15px;">Hukum Stokes menyatakan bahwa gaya hambat (F) pada bola yang bergerak dalam fluida kental adalah F = 6πηrv. Saat bola mencapai kecepatan terminal, gaya gravitasi sama dengan gaya hambat ditambah gaya apung.</p><!-- Formula Card -->
+     <div class="glass-panel p-5 rounded-xl text-center" style="background:rgba(6,182,212,0.12); border:2px solid var(--border);">
+      <p class="text-xs mb-3" style="color:var(--text-muted);font-weight:600">Rumus Kecepatan Terminal (v)</p>
+      <p data-template-id="teori-formula" class="canva-text font-bold text-3xl mb-4" style="color: rgb(12, 74, 110); font-weight: 700; font-style: normal; font-size: 24px;">v = 2r²(ρb - ρf)g / 9η</p>
+      <p class="text-xs" style="color:var(--text-secondary);line-height:1.6"><strong>Rumus Gaya Hambat Stokes:</strong> F = 6πηrv</p>
+     </div>
+    </div><!-- Symbol Legend -->
+    <div class="glass-panel p-5 rounded-2xl animate-fade-up shadow-lg" style="border:1px solid var(--border);animation-delay:250ms;">
+     <h3 class="font-bold text-base mb-3 flex items-center gap-2" style="color:var(--text-primary);"><span style="font-size:20px">📖</span> Keterangan Simbol</h3>
+     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div class="p-3 rounded-lg" style="background:rgba(6,182,212,0.08); border-left:3px solid #06b6d4;">
+       <p class="text-xs font-bold mb-1" style="color:#06b6d4;"><i>v</i> = Kecepatan Terminal</p>
+       <p class="text-xs" style="color:var(--text-secondary);">Kecepatan konstan saat gaya hambat = gaya berat neto (m/s)</p>
+      </div>
+      <div class="p-3 rounded-lg" style="background:rgba(139,92,246,0.08); border-left:3px solid #8b5cf6;">
+       <p class="text-xs font-bold mb-1" style="color:#8b5cf6;"><i>r</i> = Jari-jari Bola</p>
+       <p class="text-xs" style="color:var(--text-secondary);">Setengah dari diameter bola (m)</p>
+      </div>
+      <div class="p-3 rounded-lg" style="background:rgba(245,158,11,0.08); border-left:3px solid #f59e0b;">
+       <p class="text-xs font-bold mb-1" style="color:#f59e0b;"><i>ρ<sub>b</sub></i> = Massa Jenis Bola</p>
+       <p class="text-xs" style="color:var(--text-secondary);">Kepadatan material bola (kg/m³)</p>
+      </div>
+      <div class="p-3 rounded-lg" style="background:rgba(16,185,129,0.08); border-left:3px solid #10b981;">
+       <p class="text-xs font-bold mb-1" style="color:#10b981;"><i>ρ<sub>f</sub></i> = Massa Jenis Fluida</p>
+       <p class="text-xs" style="color:var(--text-secondary);">Kepadatan fluida (kg/m³)</p>
+      </div>
+      <div class="p-3 rounded-lg" style="background:rgba(236,72,153,0.08); border-left:3px solid #ec4899;">
+       <p class="text-xs font-bold mb-1" style="color:#ec4899;"><i>g</i> = Percepatan Gravitasi</p>
+       <p class="text-xs" style="color:var(--text-secondary);">Umumnya 9.81 m/s²</p>
+      </div>
+      <div class="p-3 rounded-lg" style="background:rgba(59,130,246,0.08); border-left:3px solid #3b82f6;">
+       <p class="text-xs font-bold mb-1" style="color:#3b82f6;"><i>η</i> = Koefisien Viskositas</p>
+       <p class="text-xs" style="color:var(--text-secondary);">Kekentalan fluida (Pa·s)</p>
+      </div>
+     </div>
+     <p data-template-id="teori-keterangan" class="canva-text text-xs leading-relaxed mt-3 p-3 rounded-lg" style="background: rgba(241, 245, 249, 0.5); border-left: 3px solid var(--accent); color: rgb(71, 85, 105); font-weight: 400; font-style: normal; font-size: 13px;">Keterangan: v = kecepatan terminal (m/s) | r = jari-jari bola (m) | ρb = massa jenis bola (kg/m³) | ρf = massa jenis fluida (kg/m³) | g = percepatan gravitasi (m/s²) | η = koefisien viskositas (Pa·s)</p>
+    </div><!-- Faktor yang Mempengaruhi -->
+    <div class="glass-panel p-5 rounded-2xl animate-fade-up shadow-lg" style="border:1px solid var(--border);animation-delay:300ms;">
+     <h3 data-template-id="teori-faktor-label" class="canva-text font-bold text-base mb-3 flex items-center gap-2" style="color: rgb(12, 74, 110); font-weight: 600; font-style: normal; font-size: 19px;">🌡️ Faktor yang Memengaruhi Viskositas</h3>
+     <p data-template-id="teori-faktor" class="canva-text text-sm leading-relaxed mb-3" style="color: rgb(30, 41, 59); font-weight: 400; font-style: normal; font-size: 15px;">1) Suhu — Semakin tinggi suhu, viskositas cairan menurun. 2) Tekanan — Pada tekanan tinggi, viskositas umumnya meningkat. 3) Jenis Fluida — Struktur molekul menentukan kekentalan.</p>
+     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div class="p-3 rounded-lg hover:shadow-md transition-all" style="background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.3);">
+       <p class="font-bold text-xs mb-1" style="color:#3b82f6;">🌡️ Suhu</p>
+       <p class="text-xs" style="color:var(--text-secondary);">↑ Suhu → ↓ Viskositas (cairan)</p>
+      </div>
+      <div class="p-3 rounded-lg hover:shadow-md transition-all" style="background:rgba(139,92,246,0.08); border:1px solid rgba(139,92,246,0.3);">
+       <p class="font-bold text-xs mb-1" style="color:#8b5cf6;">💨 Tekanan</p>
+       <p class="text-xs" style="color:var(--text-secondary);">↑ Tekanan → ↑ Viskositas (gas)</p>
+      </div>
+      <div class="p-3 rounded-lg hover:shadow-md transition-all" style="background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.3);">
+       <p class="font-bold text-xs mb-1" style="color:#10b981;">🧪 Jenis Fluida</p>
+       <p class="text-xs" style="color:var(--text-secondary);">Struktur molekul &amp; komposisi</p>
+      </div>
+     </div>
+    </div><!-- Penerapan Sehari-hari -->
+    <div class="glass-panel p-5 rounded-2xl animate-fade-up shadow-lg" style="border:1px solid var(--border);animation-delay:350ms;background:linear-gradient(135deg, rgba(16,185,129,0.08), rgba(6,182,212,0.06));">
+     <h3 class="font-bold text-base mb-3 flex items-center gap-2" style="color:#0c4a6e;"><span style="font-size:20px">🌍</span> Penerapan Sehari-hari</h3>
+     <p data-template-id="teori-penerapan" class="canva-text text-sm leading-relaxed mb-4" style="color: rgb(30, 41, 59); font-weight: 400; font-style: normal; font-size: 15px;">Industri: Pelumasan mesin (oli), industri makanan (madu, sirup), farmasi (kekentalan obat sirup), dan kosmetik (lotion, krim).</p>
+     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div class="p-3 rounded-lg" style="background:rgba(6,182,212,0.08); border-left:3px solid #06b6d4;">
+       <p class="font-bold text-xs mb-1" style="color:#06b6d4;">⚙️ Industri</p>
+       <p class="text-xs" style="color:var(--text-secondary);">Pelumasan mesin, oli transmisi, cairan pendingin</p>
+      </div>
+      <div class="p-3 rounded-lg" style="background:rgba(244,63,94,0.08); border-left:3px solid #f43f5e;">
+       <p class="font-bold text-xs mb-1" style="color:#f43f5e;">🍽️ Makanan</p>
+       <p class="text-xs" style="color:var(--text-secondary);">Madu, sirup, ketchup, mayonnaise</p>
+      </div>
+      <div class="p-3 rounded-lg" style="background:rgba(139,92,246,0.08); border-left:3px solid #8b5cf6;">
+       <p class="font-bold text-xs mb-1" style="color:#8b5cf6;">💊 Farmasi</p>
+       <p class="text-xs" style="color:var(--text-secondary);">Sirup obat, suspensi, injeksi</p>
+      </div>
+      <div class="p-3 rounded-lg" style="background:rgba(245,158,11,0.08); border-left:3px solid #f59e0b;">
+       <p class="font-bold text-xs mb-1" style="color:#f59e0b;">💄 Kosmetik</p>
+       <p class="text-xs" style="color:var(--text-secondary);">Lotion, krim, pasta gigi</p>
+      </div>
+     </div>
+    </div><!-- Fakta Menarik -->
+    <div class="glass-panel p-5 rounded-2xl animate-fade-up shadow-lg" style="border:1px solid var(--border);animation-delay:400ms;background:linear-gradient(135deg, rgba(236,72,153,0.08), rgba(139,92,246,0.06));">
+     <h3 class="font-bold text-base mb-3 flex items-center gap-2" style="color:#0c4a6e;"><span style="font-size:20px">⭐</span> Fakta Menarik</h3>
+     <div class="space-y-2">
+      <div class="p-3 rounded-lg hover:shadow-md transition-all" style="background:rgba(236,72,153,0.12); border-left:3px solid #ec4899;">
+       <p class="text-xs font-semibold mb-1" style="color:#ec4899;">🐌 Madu Berkecepatan Siput</p>
+       <p class="text-xs" style="color:var(--text-secondary);">Madu memiliki viskositas ~5000× lebih besar dari air! Bola akan jatuh sangat lambat.</p>
+      </div>
+      <div class="p-3 rounded-lg hover:shadow-md transition-all" style="background:rgba(59,130,246,0.12); border-left:3px solid #3b82f6;">
+       <p class="text-xs font-semibold mb-1" style="color:#3b82f6;">🧊 Es Krim Bergerak</p>
+       <p class="text-xs" style="color:var(--text-secondary);">Es krim cair seperti fluida dengan viskositas tinggi. Saat dipanaskan, viskositas menurun drastis.</p>
+      </div>
+      <div class="p-3 rounded-lg hover:shadow-md transition-all" style="background:rgba(16,185,129,0.12); border-left:3px solid #10b981;">
+       <p class="text-xs font-semibold mb-1" style="color:#10b981;">🪨 Aliran Lava</p>
+       <p class="text-xs" style="color:var(--text-secondary);">Lava letusan gunung berapi adalah fluida dengan viskositas sangat tinggi, mengalir lambat seperti balap siput.</p>
+      </div>
+     </div>
+    </div><!-- Teori Image -->
+    <div class="glass-panel p-4 rounded-2xl animate-fade-up shadow-lg" style="border:1px solid var(--border);animation-delay:450ms;"><img data-template-id="teori-image" class="canva-image w-full max-h-72 object-cover rounded-xl" loading="lazy" style="display:block;" src="https://images.pexels.com/photos/36417751/pexels-photo-36417751.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=800" alt="Close-up of a 100ml Pyrex beaker with liquid pouring in for a lab experiment.">
+    </div>
+   </section><!-- CSS Animations for Teori Section -->
+   <style>
+    @keyframes teori-fall-fast { 0% { cy: 30; } 100% { cy: 165; } }
+    @keyframes teori-fall-medium { 0% { cy: 30; } 100% { cy: 165; } }
+    @keyframes teori-fall-slow { 0% { cy: 30; } 100% { cy: 165; } }
+   </style><!-- PROSEDUR -->
+   <section class="tab-panel h-full overflow-y-auto gap-2 pt-0" id="panel-prosedur" role="tabpanel">
+    <div class="glass-panel p-6 rounded-2xl" style="background:linear-gradient(135deg, rgba(6,182,212,0.12), rgba(139,92,246,0.1)); border:1px solid var(--border);">
+     <h2 data-template-id="prosedur-title" class="canva-text font-bold text-2xl mb-2" style="color: rgb(6, 182, 212); font-weight: 700; font-style: normal; font-size: 24px;">Prosedur Percobaan</h2>
+     <p class="text-sm" style="color:var(--text-secondary);">Ikuti alur eksperimen berikut secara berurutan.</p>
+    </div>
+    <div class="space-y-1 mt-2">
+     <div class="glass-panel p-4 rounded-xl" style="border:1px solid var(--border);">
+      <div class="flex gap-3 items-start">
+       <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white flex-shrink-0" style="background:var(--accent);">
+        1
+       </div>
+       <div>
+        <h3 class="font-bold text-sm">Pilih Jenis Fluida</h3>
+        <p class="text-xs mt-1" style="color:var(--text-secondary)">Tentukan fluida yang ingin diuji dari menu dropdown</p>
+       </div>
+      </div>
+     </div>
+     <div class="glass-panel p-4 rounded-xl" style="border:1px solid var(--border);">
+      <div class="flex gap-3 items-start">
+       <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white flex-shrink-0" style="background:#8b5cf6;">
+        2
+       </div>
+       <div>
+        <h3 class="font-bold text-sm">Pilih Ukuran Gelas Ukur</h3>
+        <p class="text-xs mt-1" style="color:var(--text-secondary)">Tentukan kapasitas gelas (250, 500, atau 1000 mL)</p>
+       </div>
+      </div>
+     </div>
+     <div class="glass-panel p-4 rounded-xl" style="border:1px solid var(--border);">
+      <div class="flex gap-3 items-start">
+       <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white flex-shrink-0" style="background:#f59e0b;">
+        3
+       </div>
+       <div>
+        <h3 class="font-bold text-sm">Pilih Material &amp; Diameter Bola</h3>
+        <p class="text-xs mt-1" style="color:var(--text-secondary)">Tentukan jenis bola dan diameter (0.5, 1, 1.5, 2 cm)</p>
+       </div>
+      </div>
+     </div>
+     <div class="glass-panel p-4 rounded-xl" style="border:1px solid var(--border);">
+      <div class="flex gap-3 items-start">
+       <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white flex-shrink-0" style="background:#10b981;">
+        4
+       </div>
+       <div>
+        <h3 class="font-bold text-sm">Tentukan Tinggi Lintasan</h3>
+        <p class="text-xs mt-1" style="color:var(--text-secondary)">Pilih ketinggian (10, 15, 20, atau 25 cm)</p>
+       </div>
+      </div>
+     </div>
+     <div class="glass-panel p-4 rounded-xl" style="border:1px solid var(--border);">
+      <div class="flex gap-3 items-start">
+       <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white flex-shrink-0" style="background:#ec4899;">
+        5
+       </div>
+       <div>
+        <h3 class="font-bold text-sm">Klik "Siapkan" lalu "Mulai"</h3>
+        <p class="text-xs mt-1" style="color:var(--text-secondary)">Jalankan simulasi dan amati gerak bola dalam fluida</p>
+       </div>
+      </div>
+     </div>
+     <div class="glass-panel p-4 rounded-xl" style="border:1px solid var(--border);">
+      <div class="flex gap-3 items-start">
+       <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white flex-shrink-0" style="background:#3b82f6;">
+        6
+       </div>
+       <div>
+        <h3 class="font-bold text-sm">Catat Data ke LKPD</h3>
+        <p class="text-xs mt-1" style="color:var(--text-secondary)">Klik "Catat dari Simulasi" untuk merekam data</p>
+       </div>
+      </div>
+     </div>
+    </div>
+   </section><!-- SIMULASI -->
+   <section class="tab-panel h-full" id="panel-simulasi" role="tabpanel">
+    <div class="progress-bar-container mb-3">
+     <div class="flex items-center justify-between mb-2"><span class="text-xs font-bold" style="color:var(--text-primary)" id="progress-label">Langkah 1 dari 5</span>
+      <div class="flex gap-1"><button class="progress-step active" onclick="goToStep(1)">1</button> <button class="progress-step" onclick="goToStep(2)">2</button> <button class="progress-step" onclick="goToStep(3)">3</button> <button class="progress-step" onclick="goToStep(4)">4</button> <button class="progress-step" onclick="goToStep(5)">5</button>
+      </div>
+     </div>
+     <div class="progress-track">
+      <div class="progress-fill" id="progress-fill" style="width:20%"></div>
+     </div>
+     <p class="text-xs mt-1" style="color:var(--text-muted)" id="progress-desc">Menentukan Fluida &amp; Variabel</p>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-3" style="height:calc(100% - 80px)"><!-- LEFT: Control -->
+     <div class="lg:col-span-1 glass-panel p-4 flex flex-col gap-3 overflow-y-auto">
+      <h2 data-template-id="sim-ctrl-title" class="canva-text font-bold text-base" style="color: rgb(15, 23, 42); font-weight: 700; font-style: normal; font-size: 24px;">🎛️ Panel Kontrol</h2>
+      <div class="flex flex-col gap-1"><label data-template-id="sim-fluid-label" class="canva-text text-xs font-medium" for="fluid-select" style="color: rgb(51, 65, 85); font-weight: 500; font-style: normal; font-size: 13px;">🧪 Jenis Fluida:</label> <select id="fluid-select" class="rounded-lg px-3 py-1.5 text-sm border font-medium" style="background:var(--bg-secondary);color:var(--text-primary);border-color:var(--accent)"> <option value="air">🧪 Air</option><option value="minyak">🧪 Minyak Goreng</option><option value="oli">🧪 Oli</option><option value="alkohol">🧪 Alkohol</option><option value="gliserin">🧪 Gliserin</option><option value="sirup">🧪 Sirup</option><option value="madu">🧪 Madu</option> </select>
+      </div>
+      <div class="flex flex-col gap-1"><label data-template-id="sim-gelas-label" class="canva-text text-xs font-medium" for="gelas-select" style="color: rgb(51, 65, 85); font-weight: 500; font-style: normal; font-size: 13px;">🥛 Gelas Ukur:</label> <select id="gelas-select" class="rounded-lg px-3 py-1.5 text-sm border font-medium" style="background:var(--bg-secondary);color:var(--text-primary);border-color:var(--accent)"> <option value="250">🥛 250 mL</option><option value="500" selected="">🥛 500 mL</option><option value="1000">🥛 1000 mL</option> </select>
+      </div>
+      <div class="flex flex-col gap-1"><label data-template-id="sim-ball-label" class="canva-text text-xs font-medium" for="ball-select" style="color: rgb(51, 65, 85); font-weight: 500; font-style: normal; font-size: 13px;">⚪ Jenis Bola:</label> <select id="ball-select" class="rounded-lg px-3 py-1.5 text-sm border font-medium" style="background:var(--bg-secondary);color:var(--text-primary);border-color:var(--accent)"> <option value="baja">⚪ Baja</option><option value="aluminium">⚪ Aluminium</option><option value="kaca">⚪ Kaca</option> </select>
+      </div>
+      <div class="flex flex-col gap-1"><label data-template-id="sim-diameter-label" class="canva-text text-xs font-medium" for="diameter-select" style="color: rgb(51, 65, 85); font-weight: 500; font-style: normal; font-size: 13px;">📏 Diameter Bola:</label> <select id="diameter-select" class="rounded-lg px-3 py-1.5 text-sm border font-medium" style="background:var(--bg-secondary);color:var(--text-primary);border-color:var(--accent)"> <option value="0.5">📏 0.5 cm</option><option value="1" selected="">📏 1 cm</option><option value="1.5">📏 1.5 cm</option><option value="2">📏 2 cm</option> </select>
+      </div>
+      <div class="flex flex-col gap-1"><label data-template-id="sim-height-label" class="canva-text text-xs font-medium" for="height-select" style="color: rgb(51, 65, 85); font-weight: 500; font-style: normal; font-size: 13px;">📐 Tinggi Lintasan:</label> <select id="height-select" class="rounded-lg px-3 py-1.5 text-sm border font-medium" style="background:var(--bg-secondary);color:var(--text-primary);border-color:var(--accent)"> <option value="0.1">10 cm</option><option value="0.15" selected="">15 cm</option><option value="0.2">20 cm</option><option value="0.25">25 cm</option> </select>
+      </div>
+      <div class="flex flex-col gap-1.5 mt-1"><label class="flex items-center gap-2 text-xs font-medium cursor-pointer" style="color:var(--text-secondary)"><input type="checkbox" id="chk-stopwatch" checked="" class="accent-cyan-500"> ⏱ Stopwatch</label> <label class="flex items-center gap-2 text-xs font-medium cursor-pointer" style="color:var(--text-secondary)"><input type="checkbox" id="chk-ruler" checked="" class="accent-cyan-500"> 📏 Penggaris</label> <label class="flex items-center gap-2 text-xs font-medium cursor-pointer" style="color:var(--text-secondary)"><input type="checkbox" id="chk-trail" class="accent-cyan-500"> ✨ Jalur Bola</label>
+      </div>
+      <div class="flex flex-wrap gap-2 mt-2"><button data-template-id="sim-prepare-btn" class="canva-button px-3 py-1.5 rounded-lg text-xs font-medium btn-hover" onclick="prepareSim()" style="background: rgb(139, 92, 246); color: rgb(255, 255, 255); font-weight: 600; font-style: normal; font-size: 13px;">🔬 Siapkan</button> <button data-template-id="sim-start-btn" class="canva-button px-3 py-1.5 rounded-lg text-xs font-medium btn-hover" onclick="startSim()" style="background: rgb(6, 182, 212); color: rgb(255, 255, 255); font-weight: 600; font-style: normal; font-size: 13px;">▶ Mulai</button> <button data-template-id="sim-pause-btn" class="canva-button px-3 py-1.5 rounded-lg text-xs font-medium btn-hover" onclick="pauseSim()" style="background: rgb(245, 158, 11); color: rgb(255, 255, 255); font-weight: 600; font-style: normal; font-size: 13px;">⏸ Jeda</button> <button data-template-id="sim-reset-btn" class="canva-button px-3 py-1.5 rounded-lg text-xs font-medium btn-hover" onclick="showResetConfirm()" style="background: rgb(55, 65, 81); color: rgb(226, 232, 240); font-weight: 600; font-style: normal; font-size: 13px;">↺ Reset</button>
+      </div>
+     </div><!-- CENTER: Simulation -->
+     <div class="lg:col-span-2 flex flex-col items-center justify-center relative py-2">
+      <div id="stopwatch-display" class="mb-2 px-4 py-1.5 rounded-lg text-cyan-300 font-bold text-xl stopwatch shadow-lg" style="background:rgba(15,23,42,0.9)">
+       00.00 s
+      </div>
+      <div class="cylinder-container w-full flex-1 relative" id="cylinder-area">
+       <svg id="cylinder-svg" width="160" height="400" viewBox="0 0 160 400" preserveAspectRatio="xMidYMid meet" class="drop-shadow-xl"><defs>
+         <linearGradient id="glass-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" style="stop-color:rgba(6,182,212,0.15)"></stop>
+          <stop offset="50%" style="stop-color:rgba(255,255,255,0.08)"></stop>
+          <stop offset="100%" style="stop-color:rgba(6,182,212,0.15)"></stop>
+         </linearGradient>
+         <linearGradient id="fluid-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" id="fluid-stop1" style="stop-color:rgba(100,180,255,0.3)"></stop>
+          <stop offset="100%" id="fluid-stop2" style="stop-color:rgba(100,180,255,0.5)"></stop>
+         </linearGradient>
+        </defs> <rect id="cyl-body" x="30" y="20" width="100" height="350" rx="6" ry="6" fill="url(#glass-grad)" stroke="#0891b2" stroke-width="3"></rect> <rect x="38" y="25" width="8" height="340" rx="4" fill="rgba(255,255,255,0.15)" class="glass-shine"></rect> <rect id="cyl-fluid" x="33" y="90" width="94" height="277" rx="3" fill="url(#fluid-grad)" opacity="0.85"></rect> <path id="cyl-meniscus" d="M33,90 Q80,84 127,90" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2"></path> <g id="cyl-marks"></g> <rect x="24" y="16" width="112" height="8" rx="4" fill="#0891b2" opacity="0.8"></rect> <rect x="26" y="368" width="108" height="10" rx="5" fill="#0891b2" opacity="0.6"></rect> <line id="start-line" x1="30" y1="100" x2="130" y2="100" stroke="#22c55e" stroke-width="2" stroke-dasharray="4,3" opacity="0.8"></line> <line id="finish-line" x1="30" y1="340" x2="130" y2="340" stroke="#ef4444" stroke-width="2" stroke-dasharray="4,3" opacity="0.8"></line>
+       </svg>
+       <div id="clamp-container" class="absolute top-[-20px] left-1/2 transform -translate-x-1/2 flex gap-2 z-20">
+        <div id="clamp-left" class="w-3 h-6 bg-gradient-to-r from-gray-600 to-gray-700 rounded-t shadow-md"></div>
+        <div id="clamp-right" class="w-3 h-6 bg-gradient-to-l from-gray-600 to-gray-700 rounded-t shadow-md"></div>
+       </div>
+       <div class="sim-ball" id="sim-ball" style="top:5%;left:50%;transform:translateX(-50%);width:18px;height:18px;background:radial-gradient(circle at 30% 30%,#d4d4d8,#52525b);position:relative;"></div>
+       <div class="ball-trail hidden" id="ball-trail"></div>
+       <div class="ruler-container" id="ruler-el"></div><!-- Real-time indicators -->
+       <div class="absolute bottom-2 left-2 p-2 rounded-lg text-xs font-medium" style="background:rgba(15,23,42,0.85);color:#cffafe;z-index:20;min-width:80px">
+        <div>
+         v: <span id="indicator-velocity">—</span>
+        </div>
+        <div>
+         d: <span id="indicator-distance">—</span>
+        </div>
+        <div>
+         η: <span id="indicator-viscosity">—</span>
+        </div>
+       </div><!-- Ripple container -->
+       <div id="ripple-container" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:100%;height:100%;pointer-events:none;z-index:5"></div>
+      </div>
+     </div><!-- RIGHT: Notebook -->
+     <div class="lg:col-span-1 flex flex-col gap-3 overflow-y-auto py-1">
+      <h2 data-template-id="notebook-title" class="canva-text font-bold text-base" style="color: rgb(15, 23, 42); font-weight: 700; font-style: normal; font-size: 24px;">📋 Buku Lab Digital</h2>
+      <div class="notebook-card p-4 flex flex-col gap-3" id="notebook-card">
+       <div class="grid grid-cols-2 gap-2 text-xs">
+        <div>
+         <span class="font-medium block text-xs mb-1" style="color:var(--text-muted)">Nama</span><input id="nb-nama" class="w-full px-2 py-1.5 rounded border text-xs" style="background:var(--bg-secondary);color:var(--text-primary);border-color:var(--border)" placeholder="Nama siswa">
+        </div>
+        <div>
+         <span class="font-medium block text-xs mb-1" style="color:var(--text-muted)">Kelas</span><input id="nb-kelas" class="w-full px-2 py-1.5 rounded border text-xs" style="background:var(--bg-secondary);color:var(--text-primary);border-color:var(--border)" placeholder="Kelas">
+        </div>
+       </div>
+       <div class="border-t pt-3" style="border-color:var(--border)">
+        <div class="grid grid-cols-2 gap-y-2 gap-x-3 text-xs">
+         <div>
+          <span style="color:var(--text-muted)" class="font-medium">🧪 Fluida:</span> <span id="nb-fluida" class="font-semibold">—</span>
+         </div>
+         <div>
+          <span style="color:var(--text-muted)" class="font-medium">📏 Diameter:</span> <span id="nb-diameter" class="font-semibold">—</span>
+         </div>
+         <div>
+          <span style="color:var(--text-muted)" class="font-medium">🥛 Gelas:</span> <span id="nb-gelas" class="font-semibold">—</span>
+         </div>
+         <div>
+          <span style="color:var(--text-muted)" class="font-medium">⚪ Bola:</span> <span id="nb-bola" class="font-semibold">—</span>
+         </div>
+         <div>
+          <span style="color:var(--text-muted)" class="font-medium">⏱ Waktu:</span> <span id="nb-waktu" class="font-bold stopwatch" style="color:var(--accent)">—</span>
+         </div>
+         <div>
+          <span style="color:var(--text-muted)" class="font-medium">🚀 Kecepatan:</span> <span id="nb-kecepatan" class="font-bold" style="color:var(--accent)">—</span>
+         </div>
+         <div>
+          <span style="color:var(--text-muted)" class="font-medium">💧 Viskositas:</span> <span id="nb-viskositas" class="font-bold" style="color:var(--accent)">—</span>
+         </div>
+         <div>
+          <span style="color:var(--text-muted)" class="font-medium">⚖️ Massa:</span> <span id="nb-massa" class="font-semibold">—</span>
+         </div>
+        </div>
+       </div>
+       <div class="border-t pt-2" style="border-color:var(--border)"><span class="text-xs font-medium" style="color:var(--text-muted)">Status:</span> <span id="nb-status" class="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">Belum dimulai</span>
+       </div>
+      </div>
+      <h3 data-template-id="notebook-history-title" class="canva-text font-semibold text-sm mt-2" style="color: rgb(12, 74, 110); font-weight: 600; font-style: normal; font-size: 14px;">Riwayat Eksperimen</h3>
+      <div class="flex-1 overflow-y-auto space-y-2" id="history-list">
+       <p class="text-xs italic text-center py-4" style="color:var(--text-muted)">Belum ada data eksperimen</p>
+      </div>
+     </div>
+    </div>
+   </section><!-- LKPD -->
+   <section class="tab-panel h-full overflow-y-auto gap-2 pt-0" id="panel-lkpd" role="tabpanel">
+    <h2 data-template-id="lkpd-title" class="canva-text font-bold mb-0" style="color: rgb(15, 23, 42); font-weight: 700; font-style: normal; font-size: 24px;">📝 Lembar Kerja Peserta Didik</h2>
+    <p data-template-id="lkpd-instruksi" class="canva-text text-sm mt-0 mb-1" style="color: rgb(30, 41, 59); font-weight: 400; font-style: normal; font-size: 15px;">Lakukan simulasi dengan berbagai variasi fluida dan bola, lalu catat hasilnya. Analisis data dan tuliskan kesimpulan.</p>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-1">
+     <div>
+      <label class="text-xs font-semibold block mb-1" style="color:var(--text-secondary)" for="lkpd-nama">Nama Siswa</label><input id="lkpd-nama" class="w-full px-3 py-2 rounded-lg border text-sm" style="background:var(--bg-secondary);color:var(--text-primary);border-color:var(--border)" placeholder="Nama...">
+     </div>
+     <div>
+      <label class="text-xs font-semibold block mb-1" style="color:var(--text-secondary)" for="lkpd-kelas">Kelas</label><input id="lkpd-kelas" class="w-full px-3 py-2 rounded-lg border text-sm" style="background:var(--bg-secondary);color:var(--text-primary);border-color:var(--border)" placeholder="Kelas...">
+     </div>
+     <div>
+      <label data-template-id="lkpd-group-label" class="canva-text text-xs font-semibold block mb-1" for="lkpd-kelompok" style="color: rgb(51, 65, 85); font-weight: 600; font-style: normal; font-size: 13px;">Kelompok:</label><input id="lkpd-kelompok" class="w-full px-3 py-2 rounded-lg border text-sm" style="background:var(--bg-secondary);color:var(--text-primary);border-color:var(--border)" placeholder="Kelompok...">
+     </div>
+    </div>
+    <div class="mt-1">
+     <label data-template-id="lkpd-tujuan-label" class="canva-text text-xs font-semibold block mb-1" style="color: rgb(15, 23, 42); font-weight: 700; font-style: normal; font-size: 15px;">Tujuan Percobaan</label><textarea id="lkpd-tujuan" class="w-full px-3 py-2.5 rounded-lg border text-sm" style="background:var(--bg-secondary);color:var(--text-primary);border-color:var(--border)" rows="3" placeholder="Tuliskan tujuan percobaan..."></textarea>
+    </div>
+    <div class="mt-1">
+     <label data-template-id="lkpd-hipotesis-label" class="canva-text text-xs font-semibold block mb-1" style="color: rgb(15, 23, 42); font-weight: 700; font-style: normal; font-size: 15px;">Hipotesis</label><textarea id="lkpd-hipotesis" class="w-full px-3 py-2.5 rounded-lg border text-sm" style="background:var(--bg-secondary);color:var(--text-primary);border-color:var(--border)" rows="3" placeholder="Tuliskan hipotesis Anda..."></textarea>
+    </div>
+    <div class="mt-1"><label data-template-id="lkpd-pengamatan-label" class="canva-text text-sm font-semibold block mb-2" style="color: rgb(15, 23, 42); font-weight: 700; font-style: normal; font-size: 15px;">Tabel Pengamatan</label>
+     <div class="overflow-x-auto border rounded-lg mb-1" style="border-color:var(--border)">
+      <table class="w-full text-xs">
+       <thead>
+        <tr style="background:var(--bg-tertiary);color:var(--text-primary)" class="font-bold border-b">
+         <th class="py-2.5 px-2 text-left">No</th>
+         <th class="py-2.5 px-2 text-left">Fluida</th>
+         <th class="py-2.5 px-2 text-left">Bola</th>
+         <th class="py-2.5 px-2 text-center">d (cm)</th>
+         <th class="py-2.5 px-2 text-center">Massa (g)</th>
+         <th class="py-2.5 px-2 text-center">t (s)</th>
+         <th class="py-2.5 px-2 text-center">v (m/s)</th>
+         <th class="py-2.5 px-2 text-center">η (Pa·s)</th>
+        </tr>
+       </thead>
+       <tbody id="lkpd-body">
+        <tr style="color:var(--text-muted)">
+         <td colspan="8" class="py-3 px-2 text-center italic text-xs">Belum ada data. Catat dari simulasi.</td>
+        </tr>
+       </tbody>
+      </table>
+     </div><button data-template-id="lkpd-record-btn" class="canva-button px-4 py-2 rounded-lg text-xs font-medium btn-hover mt-2" onclick="recordFromSim()" style="background: rgb(6, 182, 212); color: rgb(255, 255, 255); font-weight: 600; font-style: normal; font-size: 13px;">📝 Catat dari Simulasi</button>
+    </div>
+    <div class="mt-1">
+     <label data-template-id="lkpd-analisis-label" class="canva-text text-sm font-semibold block mb-2" style="color: rgb(15, 23, 42); font-weight: 700; font-style: normal; font-size: 15px;">Analisis Data</label><textarea id="lkpd-analisis" class="w-full px-3 py-2.5 rounded-lg border text-sm" style="background:var(--bg-secondary);color:var(--text-primary);border-color:var(--border)" rows="4" placeholder="Analisis data pengamatan Anda..."></textarea>
+    </div>
+    <div class="mt-1">
+     <label data-template-id="lkpd-kesimpulan-label" class="canva-text text-sm font-semibold block mb-2" style="color: rgb(15, 23, 42); font-weight: 700; font-style: normal; font-size: 15px;">Kesimpulan</label><textarea id="lkpd-kesimpulan" class="w-full px-3 py-2.5 rounded-lg border text-sm" style="background:var(--bg-secondary);color:var(--text-primary);border-color:var(--border)" rows="3" placeholder="Tuliskan kesimpulan dari percobaan..."></textarea>
+    </div>
+    <div class="flex gap-2 flex-wrap mt-1"><button data-template-id="lkpd-save-btn" class="canva-button px-4 py-2.5 rounded-lg text-sm font-medium btn-hover" onclick="saveLkpd()" style="background: rgb(6, 182, 212); color: rgb(255, 255, 255); font-weight: 600; font-style: normal; font-size: 15px;">💾 Simpan</button> <button data-template-id="lkpd-reset-btn" class="canva-button px-4 py-2.5 rounded-lg text-sm font-medium btn-hover" onclick="showResetConfirm()" style="background: rgb(107, 114, 128); color: rgb(255, 255, 255); font-weight: 600; font-style: normal; font-size: 15px;">↺ Reset</button> <button data-template-id="lkpd-export-btn" class="canva-button px-4 py-2.5 rounded-lg text-sm font-medium btn-hover" onclick="exportLkpdPdf()" style="background: rgb(220, 38, 38); color: rgb(255, 255, 255); font-weight: 600; font-style: normal; font-size: 15px;">📄 Export PDF</button>
+    </div>
+    <div id="save-status" class="hidden p-3 rounded-lg bg-green-50 border border-green-200 text-green-700 text-xs font-medium text-center mt-2">
+     ✓ Tersimpan!
+    </div>
+   </section><!-- GRAFIK -->
+   <section class="tab-panel h-full overflow-y-auto gap-2 pt-0" id="panel-grafik" role="tabpanel">
+    <h2 data-template-id="grafik-title" class="canva-text font-bold" style="color: rgb(15, 23, 42); font-weight: 700; font-style: normal; font-size: 24px;">📊 Grafik &amp; Analisis</h2>
+    <p class="text-sm" style="color:var(--text-muted)">Data dari eksperimen akan ditampilkan dalam grafik.</p>
+    <div class="glass-panel p-4 mt-3">
+     <h3 class="font-bold text-sm mb-3" style="color:var(--text-primary)">🔍 Eksplorasi Perbandingan</h3>
+     <div class="flex flex-wrap gap-2 mb-3"><button class="px-3 py-1.5 rounded-lg text-xs font-medium btn-hover text-white" style="background:#06b6d4" onclick="runComparison('air','oli')">Air vs Oli</button> <button class="px-3 py-1.5 rounded-lg text-xs font-medium btn-hover text-white" style="background:#8b5cf6" onclick="runComparison('air','madu')">Air vs Madu</button> <button class="px-3 py-1.5 rounded-lg text-xs font-medium btn-hover text-white" style="background:#f59e0b" onclick="runComparison('sirup','gliserin')">Sirup vs Gliserin</button>
+     </div>
+     <div id="comparison-result" class="hidden">
+      <table class="w-full text-xs" id="comparison-table">
+       <thead>
+        <tr style="background:var(--bg-tertiary)" class="font-bold">
+         <th class="py-2 px-3 text-left">Parameter</th>
+         <th class="py-2 px-3 text-center">A</th>
+         <th class="py-2 px-3 text-center">B</th>
+         <th class="py-2 px-3 text-center">Selisih</th>
+        </tr>
+       </thead>
+       <tbody id="comparison-body"></tbody>
+      </table>
+     </div>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-3">
+     <div class="glass-panel p-4">
+      <h4 class="text-sm font-bold mb-2" style="color:var(--text-primary)">Viskositas vs Fluida</h4>
+      <canvas id="chart-viscosity" height="200"></canvas>
+     </div>
+     <div class="glass-panel p-4">
+      <h4 class="text-sm font-bold mb-2" style="color:var(--text-primary)">Waktu vs Fluida</h4>
+      <canvas id="chart-time" height="200"></canvas>
+     </div>
+     <div class="glass-panel p-4">
+      <h4 class="text-sm font-bold mb-2" style="color:var(--text-primary)">Kecepatan vs Fluida</h4>
+      <canvas id="chart-velocity" height="200"></canvas>
+     </div>
+    </div>
+    <p id="grafik-empty" class="text-center text-sm italic py-6" style="color:var(--text-muted)">Jalankan eksperimen terlebih dahulu untuk melihat grafik.</p>
+    <div class="glass-panel p-5 mt-4">
+     <h3 class="font-bold text-sm mb-3" style="color:var(--text-primary)">💡 Pertanyaan Analisis</h3>
+     <div class="space-y-3">
+      <div>
+       <p class="text-xs font-medium mb-1" style="color:var(--text-secondary)">1. Mengapa bola lebih lambat pada madu dibanding air?</p><textarea class="w-full px-3 py-2 rounded-lg border text-xs" style="background:var(--bg-secondary);color:var(--text-primary);border-color:var(--border)" rows="2" placeholder="Jawaban Anda..."></textarea>
+      </div>
+      <div>
+       <p class="text-xs font-medium mb-1" style="color:var(--text-secondary)">2. Mengapa diameter bola memengaruhi waktu jatuh?</p><textarea class="w-full px-3 py-2 rounded-lg border text-xs" style="background:var(--bg-secondary);color:var(--text-primary);border-color:var(--border)" rows="2" placeholder="Jawaban Anda..."></textarea>
+      </div>
+     </div>
+    </div>
+   </section><!-- PENGEMBANG -->
+   <section class="tab-panel flex flex-col items-center gap-3 h-full overflow-y-auto pt-6" id="panel-pengembang" role="tabpanel"><img data-template-id="dev-avatar" class="canva-image w-32 h-32 rounded-full object-cover border-4" style="border-color:rgb(6,182,212);" loading="lazy" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjEq8gI-D1JLk7DoVMr-hB2F7LYGh7iqoJa8dUPUGSAL1eyMF6NMNUz0nRClReCpdr7-812Ucn08KfBpJRXq6uR5Bm5OBHASgcFUZkhkoaXy2DZ3iljEhvBjvLIs9W_EUPlIJ88PhQUnjhgUs3JuAOvoXmRSGsovujUSfwmYq89EcQFQeDcu9rwPx2tawc/s1672/profile.png" alt="Yunita Rahmani, S.Pd., Gr., Pengembang Media Pembelajaran">
+    <h2 data-template-id="dev-name" class="canva-text font-bold text-xl" style="color: rgb(15, 23, 42); font-weight: 700; font-style: normal; font-size: 22px;">Yunita Rahmani, S.Pd., Gr.</h2>
+    <p data-template-id="dev-role" class="canva-text text-xs font-semibold" style="color: rgb(6, 182, 212); font-weight: 600; font-style: normal; font-size: 14px;">Pengembang Media Pembelajaran</p>
+    <p data-template-id="dev-desc" class="canva-text text-xs leading-relaxed max-w-md text-center" style="color: rgb(30, 41, 59); font-weight: 400; font-style: normal; font-size: 14px;">Seorang pendidik berdedikasi yang percaya teknologi pembelajaran dapat mengubah cara siswa memahami sains. Melalui lab maya interaktif ini, semoga konsep viskositas menjadi lebih mudah dan menyenangkan dipelajari.</p>
+    <div class="glass-panel p-4 rounded-lg max-w-md mt-4 text-center">
+     <div class="space-y-1 text-xs" style="color:var(--text-muted)">
+      <p><strong>Versi:</strong> 2.1.0 | <strong>Lisensi:</strong> CC BY-NC-SA 4.0</p>
+      <p>© 2026 Yunita Rahmani, S.Pd., Gr.</p>
+     </div>
+    </div>
+   </section>
+  </main>
+  <script src="/_sdk/6740099151a06780.editing_sdk.js" integrity="sha512-eSc5OWFJjK6fUpxViOKXm5ekJ3Gp5icgygsjPVz9Xzudb9TkX/uNdpqNHc63uN0PdxYE9+g8pZAHIib0FgE0Cw=="></script>
+  <script>
+// ===== PHYSICS ENGINE =====
+const Physics = {
+  G: 9.81,
+  FLUIDS: {
+    air: { name: 'Air', density: 1000, viscosity: 0.001, color1: 'rgba(100,180,255,0.3)', color2: 'rgba(100,180,255,0.5)' },
+    minyak: { name: 'Minyak Goreng', density: 920, viscosity: 0.065, color1: 'rgba(255,200,50,0.4)', color2: 'rgba(200,150,30,0.6)' },
+    oli: { name: 'Oli', density: 880, viscosity: 0.25, color1: 'rgba(80,60,30,0.5)', color2: 'rgba(50,30,10,0.7)' },
+    alkohol: { name: 'Alkohol', density: 789, viscosity: 0.0012, color1: 'rgba(200,220,255,0.25)', color2: 'rgba(180,200,240,0.4)' },
+    gliserin: { name: 'Gliserin', density: 1260, viscosity: 1.5, color1: 'rgba(220,220,200,0.5)', color2: 'rgba(200,200,180,0.7)' },
+    sirup: { name: 'Sirup', density: 1300, viscosity: 2.5, color1: 'rgba(180,80,30,0.5)', color2: 'rgba(150,50,10,0.7)' },
+    madu: { name: 'Madu', density: 1400, viscosity: 5.0, color1: 'rgba(220,160,40,0.6)', color2: 'rgba(180,120,20,0.8)' }
+  },
+  BALLS: {
+    baja: { name: 'Baja', density: 7800, color: 'radial-gradient(circle at 30% 30%, #d4d4d8, #52525b)' },
+    aluminium: { name: 'Aluminium', density: 2700, color: 'radial-gradient(circle at 30% 30%, #e2e8f0, #94a3b8)' },
+    kaca: { name: 'Kaca', density: 2500, color: 'radial-gradient(circle at 30% 30%, #e0f2fe, #7dd3fc)' }
+  },
+  CYLINDER_SIZES: { 250: { h: 320, fluidH: 220 }, 500: { h: 400, fluidH: 277 }, 1000: { h: 480, fluidH: 340 } },
+  calculateResult(params) {
+    const fluid = this.FLUIDS[params.fluidKey];
+    const ball = this.BALLS[params.ballKey];
+    const r = (params.diameterCm / 100) / 2;
+    const vt = (2 * r * r * (ball.density - fluid.density) * this.G) / (9 * fluid.viscosity);
+    const t = params.heightM / Math.abs(vt);
+    const volume = (4/3) * Math.PI * Math.pow(r, 3);
+    const mass = ball.density * volume;
+    return { terminalVelocity: Math.abs(vt), time: t, viscosity: fluid.viscosity, distance: params.heightM, ballMass: mass * 1000 };
+  }
+};
+
+// ===== STATE =====
+let simState = 'idle', simAnim = null, simStartTime = 0, simPauseElapsed = 0;
+let simResult = { v: 0, t: 0, eta: 0 };
+let experiments = [];
+let audioEnabled = true, audioCtx = null;
+let chartViscosity = null, chartTime = null, chartVelocity = null;
+
+// ===== AUDIO =====
+function getAudioCtx() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); return audioCtx; }
+function playTone(freq, duration, type='sine') {
+  if (!audioEnabled) return;
+  try { const ctx = getAudioCtx(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.type = type; osc.frequency.value = freq; gain.gain.setValueAtTime(0.15, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration); osc.connect(gain); gain.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + duration); } catch(e) {}
+}
+function playSplash() { playTone(200, 0.3, 'triangle'); }
+function playClick() { playTone(800, 0.05, 'square'); }
+function playSuccess() { playTone(523, 0.1); setTimeout(() => playTone(659, 0.1), 100); setTimeout(() => playTone(784, 0.15), 200); }
+
+// ===== SPLASH =====
+function startApp() {
+  playClick();
+  const btn = document.querySelector('[data-template-id="splash-btn"]');
+  const loading = document.getElementById('splash-loading');
+  btn.style.display = 'none';
+  loading.classList.remove('hidden');
+  setTimeout(() => { document.getElementById('splash').classList.add('hidden'); setTimeout(() => document.getElementById('splash').remove(), 700); }, 1200);
+}
+
+// ===== TABS =====
+function switchTab(tabName) {
+  document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active'); b.classList.add('bg-slate-700','text-slate-300'); b.setAttribute('aria-selected','false'); });
+  const targetBtn = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
+  if (targetBtn) { targetBtn.classList.add('active'); targetBtn.classList.remove('bg-slate-700','text-slate-300'); targetBtn.setAttribute('aria-selected','true'); }
+  document.querySelectorAll('.tab-panel').forEach(p => { p.classList.remove('active'); });
+  const panel = document.getElementById('panel-' + tabName);
+  if (panel) { panel.classList.add('active'); requestAnimationFrame(() => panel.classList.add('active')); }
+  if (tabName === 'grafik') updateCharts();
+}
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.tab-btn').forEach(btn => { btn.addEventListener('click', () => { playClick(); switchTab(btn.dataset.tab); }); });
+});
+
+// ===== UTILS =====
+function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500); }
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+function showResetConfirm() { openModal('modal-reset'); }
+function confirmReset() { closeModal('modal-reset'); resetSim(); showToast('↺ Simulasi direset'); }
+function toggleDark() { document.documentElement.classList.toggle('dark'); playClick(); }
+function toggleFullscreen() { if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{}); else document.exitFullscreen().catch(()=>{}); }
+function toggleAudio() { audioEnabled = !audioEnabled; showToast(audioEnabled ? '🔊 Audio aktif' : '🔇 Audio nonaktif'); }
+
+// ===== MODE =====
+function switchMode() {
+  const mode = document.getElementById('mode-select').value;
+  const guruPanel = document.getElementById('guru-panel');
+  if (mode === 'guru') { guruPanel.classList.remove('hidden'); populateIdealData(); } else { guruPanel.classList.add('hidden'); }
+}
+function populateIdealData() {
+  const tbody = document.getElementById('ideal-data-body'); tbody.innerHTML = '';
+  Object.entries(Physics.FLUIDS).forEach(([key, f]) => {
+    const res = Physics.calculateResult({ fluidKey: key, ballKey: 'baja', diameterCm: 1, heightM: 0.15 });
+    tbody.insertAdjacentHTML('beforeend', `<tr class="border-b" style="border-color:var(--border);color:var(--text-secondary)"><td class="py-2 px-2">${f.name}</td><td class="py-2 px-2 text-center">${f.viscosity.toFixed(4)}</td><td class="py-2 px-2 text-center">${f.density}</td><td class="py-2 px-2 text-center">${res.terminalVelocity.toFixed(4)}</td></tr>`);
+  });
+}
+function runDemonstration() { showToast('🎬 Demonstrasi: gunakan tab Simulasi'); switchTab('simulasi'); }
+
+// ===== DASHBOARD =====
+function updateDashboardProgress(step) {
+  document.getElementById('dashboard-progress-label').textContent = `Tahap ${step} dari 6`;
+  document.getElementById('dashboard-progress-percent').textContent = Math.round((step / 6) * 100) + '%';
+  document.getElementById('dashboard-progress-bar').style.width = (step * 16.67) + '%';
+  document.querySelectorAll('.dashboard-step').forEach((el, i) => { el.classList.remove('active', 'completed'); if (i + 1 === step) el.classList.add('active'); else if (i + 1 < step) el.classList.add('completed'); });
+}
+function updateDashboardStats() {
+  document.getElementById('stat-experiments').textContent = experiments.length;
+  document.getElementById('stat-fluids').textContent = new Set(experiments.map(e => e.fluidKey)).size;
+  if (experiments.length > 0) { const avg = experiments.reduce((s, e) => s + e.eta, 0) / experiments.length; document.getElementById('stat-avg-eta').textContent = avg.toFixed(4); }
+}
+
+// ===== CYLINDER =====
+function createGraduatedCylinder() {
+  const size = parseInt(document.getElementById('gelas-select').value);
+  const cfg = Physics.CYLINDER_SIZES[size];
+  const svg = document.getElementById('cylinder-svg');
+  svg.setAttribute('height', cfg.h); svg.setAttribute('viewBox', `0 0 160 ${cfg.h}`);
+  document.getElementById('cyl-body').setAttribute('height', cfg.h - 50);
+  updateFluidLevel(); updateLines(cfg);
+}
+function updateFluidLevel() {
+  const size = parseInt(document.getElementById('gelas-select').value);
+  const cfg = Physics.CYLINDER_SIZES[size];
+  const fluidRect = document.getElementById('cyl-fluid');
+  const fluidTop = cfg.h - 35 - cfg.fluidH;
+  fluidRect.setAttribute('y', fluidTop); fluidRect.setAttribute('height', cfg.fluidH);
+  document.getElementById('cyl-meniscus').setAttribute('d', `M33,${fluidTop} Q80,${fluidTop-5} 127,${fluidTop}`);
+}
+function updateLines(cfg) {
+  const startY = cfg.h - 35 - cfg.fluidH + 20; const finishY = cfg.h - 55;
+  document.getElementById('start-line').setAttribute('y1', startY); document.getElementById('start-line').setAttribute('y2', startY);
+  document.getElementById('finish-line').setAttribute('y1', finishY); document.getElementById('finish-line').setAttribute('y2', finishY);
+}
+function changeLiquid() {
+  const fluidKey = document.getElementById('fluid-select').value;
+  const fluid = Physics.FLUIDS[fluidKey];
+  document.getElementById('fluid-stop1').style.stopColor = fluid.color1;
+  document.getElementById('fluid-stop2').style.stopColor = fluid.color2;
+  resetSim(); showToast(`🧪 ${fluid.name} terpilih`);
+}
+
+// ===== BALL =====
+function getDiameter() { return parseFloat(document.getElementById('diameter-select').value); }
+function placeBall() {
+  const ballEl = document.getElementById('sim-ball');
+  const d = getDiameter(); const sizePx = Math.max(12, d * 14);
+  const ballKey = document.getElementById('ball-select').value;
+  ballEl.style.width = sizePx + 'px'; ballEl.style.height = sizePx + 'px';
+  ballEl.style.background = Physics.BALLS[ballKey].color;
+  const svg = document.getElementById('cylinder-svg');
+  const svgRect = svg.getBoundingClientRect();
+  const area = document.getElementById('cylinder-area');
+  const areaRect = area.getBoundingClientRect();
+  const topOffset = svgRect.top - areaRect.top - sizePx - 5;
+  ballEl.style.top = Math.max(0, topOffset) + 'px';
+  ballEl.style.left = '50%'; ballEl.style.transform = 'translateX(-50%)';
+}
+
+// ===== SIMULATION =====
+function goToStep(step) { updateProgress(step); playClick(); }
+function updateProgress(step) { const pct = (step / 5) * 100; document.getElementById('progress-fill').style.width = pct + '%'; document.getElementById('progress-label').textContent = `Langkah ${step} dari 5`; }
+function prepareSim() { resetSim(); placeBall(); simState = 'prepared'; updateStatus('Siap'); playClick(); showToast('🔬 Simulasi siap'); }
+function startSim() {
+  if (simState === 'running') return;
+  if (simState === 'paused') { resumeSim(); return; }
+  if (simState !== 'prepared') prepareSim();
+  simState = 'running'; simPauseElapsed = 0; simStartTime = performance.now();
+  updateStatus('Berjalan...');
+  const fluidKey = document.getElementById('fluid-select').value;
+  const ballKey = document.getElementById('ball-select').value;
+  const diameterCm = getDiameter();
+  const heightM = parseFloat(document.getElementById('height-select').value);
+  const physicsData = Physics.calculateResult({ fluidKey, ballKey, diameterCm, heightM });
+  simResult = { v: physicsData.terminalVelocity, t: physicsData.time, eta: physicsData.viscosity };
+  const totalTime = physicsData.time;
+  const svg = document.getElementById('cylinder-svg');
+  const svgRect = svg.getBoundingClientRect();
+  const area = document.getElementById('cylinder-area');
+  const areaRect = area.getBoundingClientRect();
+  const svgH = parseFloat(svg.getAttribute('height'));
+  const scale = svgRect.height / svgH;
+  const startPx = (svgRect.top - areaRect.top) + parseFloat(document.getElementById('start-line').getAttribute('y1')) * scale;
+  const finishPx = (svgRect.top - areaRect.top) + parseFloat(document.getElementById('finish-line').getAttribute('y1')) * scale;
+  const ballEl = document.getElementById('sim-ball');
+  const ballSize = parseFloat(ballEl.style.width);
+  const trail = document.getElementById('ball-trail');
+  document.getElementById('clamp-left').classList.add('clamp-opening-left');
+  document.getElementById('clamp-right').classList.add('clamp-opening-right');
+  if (document.getElementById('chk-trail').checked) { trail.classList.remove('hidden'); trail.style.top = startPx + 'px'; }
+  let splashed = false;
+  ballEl.classList.add('ball-highlight');
+  function animateBall(now) {
+    if (simState !== 'running') return;
+    const elapsed = (now - simStartTime) / 1000 + simPauseElapsed;
+    const frac = Math.min(elapsed / totalTime, 1);
+    const y = startPx + (finishPx - startPx) * frac;
+    ballEl.style.top = (y - ballSize / 2) + 'px';
+    if (document.getElementById('chk-trail').checked) trail.style.height = Math.max(0, y - startPx) + 'px';
+    updateStopwatch(elapsed);
+    updateIndicators(physicsData.terminalVelocity, heightM * 100, simResult.eta);
+    if (!splashed && frac > 0.05) { 
+      splashed = true; 
+      playSplash(); 
+      ballEl.classList.add('ball-splash'); 
+      createFluidRipples();
+      createBubbles();
+      setTimeout(() => ballEl.classList.remove('ball-splash'), 400); 
+    }
+    if (frac >= 1) {
+      simState = 'done'; updateStopwatch(totalTime); updateNotebook(); updateStatus('Selesai ✓');
+      playSuccess(); document.getElementById('clamp-left').classList.remove('clamp-opening-left'); document.getElementById('clamp-right').classList.remove('clamp-opening-right');
+      ballEl.classList.remove('ball-highlight');
+      showToast('✅ Eksperimen selesai!'); updateDashboardStats(); return;
+    }
+    simAnim = requestAnimationFrame(animateBall);
+  }
+  simAnim = requestAnimationFrame(animateBall);
+}
+function pauseSim() { if (simState !== 'running') return; simState = 'paused'; cancelAnimationFrame(simAnim); simPauseElapsed += (performance.now() - simStartTime) / 1000; updateStatus('Dijeda'); showToast('⏸ Dijeda'); }
+function resumeSim() {
+  simState = 'running'; simStartTime = performance.now(); updateStatus('Berjalan...');
+  const totalTime = simResult.t;
+  const svg = document.getElementById('cylinder-svg'); const svgRect = svg.getBoundingClientRect();
+  const area = document.getElementById('cylinder-area'); const areaRect = area.getBoundingClientRect();
+  const svgH = parseFloat(svg.getAttribute('height')); const scale = svgRect.height / svgH;
+  const startPx = (svgRect.top - areaRect.top) + parseFloat(document.getElementById('start-line').getAttribute('y1')) * scale;
+  const finishPx = (svgRect.top - areaRect.top) + parseFloat(document.getElementById('finish-line').getAttribute('y1')) * scale;
+  const ballEl = document.getElementById('sim-ball'); const ballSize = parseFloat(ballEl.style.width);
+  const trail = document.getElementById('ball-trail');
+  function animateBall(now) {
+    if (simState !== 'running') return;
+    const elapsed = (now - simStartTime) / 1000 + simPauseElapsed;
+    const frac = Math.min(elapsed / totalTime, 1);
+    const y = startPx + (finishPx - startPx) * frac;
+    ballEl.style.top = (y - ballSize / 2) + 'px';
+    if (document.getElementById('chk-trail').checked) trail.style.height = Math.max(0, y - startPx) + 'px';
+    updateStopwatch(elapsed);
+    if (frac >= 1) { simState = 'done'; updateStopwatch(totalTime); updateNotebook(); updateStatus('Selesai ✓'); playSuccess(); showToast('✅ Selesai!'); updateDashboardStats(); return; }
+    simAnim = requestAnimationFrame(animateBall);
+  }
+  simAnim = requestAnimationFrame(animateBall);
+}
+function resetSim() {
+  if (simAnim) cancelAnimationFrame(simAnim);
+  simState = 'idle'; simPauseElapsed = 0;
+  document.getElementById('sim-ball').style.top = '2%';
+  document.getElementById('sim-ball').classList.remove('ball-highlight');
+  updateStopwatch(0);
+  updateIndicators(0, 0, 0);
+  document.getElementById('ball-trail').classList.add('hidden');
+  document.getElementById('ball-trail').style.height = '0px';
+  updateStatus('Belum dimulai');
+  document.getElementById('clamp-left').classList.remove('clamp-opening-left');
+  document.getElementById('clamp-right').classList.remove('clamp-opening-right');
+}
+function updateStopwatch(elapsed) { document.getElementById('stopwatch-display').textContent = elapsed.toFixed(2) + ' s'; }
+function updateIndicators(velocity, distance, viscosity) {
+  document.getElementById('indicator-velocity').textContent = velocity.toFixed(3) + ' m/s';
+  document.getElementById('indicator-distance').textContent = distance.toFixed(1) + ' cm';
+  document.getElementById('indicator-viscosity').textContent = viscosity.toFixed(4) + ' Pa·s';
+}
+function createFluidRipples() {
+  const svg = document.getElementById('cylinder-svg');
+  const fluidRect = document.getElementById('cyl-fluid');
+  const cy = parseFloat(fluidRect.getAttribute('y'));
+  const cx = parseFloat(fluidRect.getAttribute('x')) + parseFloat(fluidRect.getAttribute('width')) / 2;
+  for (let i = 0; i < 3; i++) {
+    const ripple = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    ripple.setAttribute('cx', cx);
+    ripple.setAttribute('cy', cy + 20);
+    ripple.setAttribute('r', '2');
+    ripple.setAttribute('class', 'ripple-fluid');
+    ripple.style.animationDelay = (i * 0.15) + 's';
+    svg.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 800 + (i * 150));
+  }
+}
+function createBubbles() {
+  const container = document.getElementById('cylinder-area');
+  const svg = document.getElementById('cylinder-svg');
+  const svgRect = svg.getBoundingClientRect();
+  const areaRect = container.getBoundingClientRect();
+  const fluidRect = document.getElementById('cyl-fluid');
+  const fluidY = parseFloat(fluidRect.getAttribute('y'));
+  const scale = svgRect.height / parseFloat(svg.getAttribute('height'));
+  const baseY = areaRect.top - areaRect.top + (fluidY + 30) * scale;
+  for (let i = 0; i < 5; i++) {
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    const size = 2 + Math.random() * 4;
+    bubble.style.width = size + 'px';
+    bubble.style.height = size + 'px';
+    bubble.style.left = (50 + (Math.random() - 0.5) * 40) + 'px';
+    bubble.style.top = baseY + 'px';
+    bubble.style.animationDelay = (i * 0.1) + 's';
+    container.appendChild(bubble);
+    setTimeout(() => bubble.remove(), 1500 + (i * 100));
+  }
+}
+function updateStopwatch(elapsed) { document.getElementById('stopwatch-display').textContent = elapsed.toFixed(2) + ' s'; }
+function updateStatus(text) {
+  const el = document.getElementById('nb-status'); el.textContent = text;
+  if (text.includes('✓')) el.className = 'text-xs font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700';
+  else if (text.includes('Berjalan')) el.className = 'text-xs font-bold px-2 py-0.5 rounded-full bg-cyan-100 text-cyan-700';
+  else if (text.includes('Dijeda')) el.className = 'text-xs font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700';
+  else el.className = 'text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500';
+}
+
+// ===== NOTEBOOK =====
+function updateNotebook() {
+  const fluidKey = document.getElementById('fluid-select').value;
+  const ballKey = document.getElementById('ball-select').value;
+  const fluid = Physics.FLUIDS[fluidKey]; const ball = Physics.BALLS[ballKey];
+  const diameterCm = getDiameter();
+  const volumeM3 = (4/3) * Math.PI * Math.pow((diameterCm / 200), 3);
+  const ballMass = Physics.BALLS[ballKey].density * volumeM3 * 1000;
+  document.getElementById('nb-fluida').textContent = fluid.name;
+  document.getElementById('nb-diameter').textContent = diameterCm + ' cm';
+  document.getElementById('nb-gelas').textContent = document.getElementById('gelas-select').value + ' mL';
+  document.getElementById('nb-bola').textContent = ball.name;
+  document.getElementById('nb-massa').textContent = ballMass.toFixed(2) + ' g';
+  document.getElementById('nb-waktu').textContent = simResult.t.toFixed(2) + ' s';
+  document.getElementById('nb-kecepatan').textContent = simResult.v.toFixed(4) + ' m/s';
+  document.getElementById('nb-viskositas').textContent = simResult.eta.toFixed(4) + ' Pa·s';
+  // Update dashboard cards
+  document.getElementById('dash-fluida').textContent = fluid.name;
+  document.getElementById('dash-bola').textContent = ball.name;
+  document.getElementById('dash-diameter').textContent = diameterCm + ' cm';
+  document.getElementById('dash-gelas').textContent = document.getElementById('gelas-select').value + ' mL';
+  document.getElementById('dash-status').textContent = '✓ Selesai';
+  experiments.push({ fluid: fluid.name, fluidKey, ball: ball.name, d: diameterCm, massa: ballMass.toFixed(2), t: parseFloat(simResult.t.toFixed(2)), v: parseFloat(simResult.v.toFixed(4)), eta: parseFloat(simResult.eta.toFixed(4)) });
+  renderHistory();
+}
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  if (experiments.length === 0) { list.innerHTML = '<p class="text-xs italic text-center py-4" style="color:var(--text-muted)">Belum ada data</p>'; return; }
+  list.innerHTML = experiments.map((e, i) => `<div class="notebook-card p-2.5 text-xs"><div class="flex justify-between"><span class="font-bold" style="color:var(--accent)">#${i+1}</span><span style="color:var(--text-muted)">${e.fluid} · ${e.ball}</span></div><div class="grid grid-cols-3 gap-1 mt-1" style="color:var(--text-secondary)"><span>t=${e.t}s</span><span>v=${e.v}</span><span>η=${e.eta}</span></div></div>`).join('');
+}
+
+// ===== LKPD =====
+function recordFromSim() {
+  if (simState !== 'done') { showToast('⚠️ Jalankan simulasi dulu'); return; }
+  const fluidKey = document.getElementById('fluid-select').value;
+  const ballKey = document.getElementById('ball-select').value;
+  const fluid = Physics.FLUIDS[fluidKey]; const ball = Physics.BALLS[ballKey];
+  const diameterCm = getDiameter();
+  const volumeM3 = (4/3) * Math.PI * Math.pow((diameterCm / 200), 3);
+  const ballMass = Physics.BALLS[ballKey].density * volumeM3 * 1000;
+  const tbody = document.getElementById('lkpd-body');
+  if (tbody.querySelector('td[colspan]')) tbody.innerHTML = '';
+  const row = tbody.children.length + 1;
+  tbody.insertAdjacentHTML('beforeend', `<tr class="border-b text-xs" style="border-color:var(--border);color:var(--text-secondary)"><td class="py-2 px-2">${row}</td><td class="py-2 px-2">${fluid.name}</td><td class="py-2 px-2">${ball.name}</td><td class="py-2 px-2 text-center">${diameterCm}</td><td class="py-2 px-2 text-center">${ballMass.toFixed(2)}</td><td class="py-2 px-2 text-center">${simResult.t.toFixed(2)}</td><td class="py-2 px-2 text-center">${simResult.v.toFixed(4)}</td><td class="py-2 px-2 text-center">${simResult.eta.toFixed(4)}</td></tr>`);
+  showToast('📝 Data dicatat ke LKPD'); playSuccess();
+}
+function saveLkpd() { document.getElementById('save-status').classList.remove('hidden'); showToast('💾 LKPD tersimpan!'); setTimeout(() => document.getElementById('save-status').classList.add('hidden'), 2000); }
+function exportLkpdPdf() {
+  const nama = document.getElementById('lkpd-nama').value || 'Siswa';
+  let tableRows = '';
+  document.getElementById('lkpd-body').querySelectorAll('tr').forEach(tr => { const cells = tr.querySelectorAll('td'); if (cells.length > 1) { tableRows += '<tr>' + Array.from(cells).map(c => `<td style="border:1px solid #ccc;padding:4px;text-align:center;font-size:11px">${c.textContent}</td>`).join('') + '</tr>'; } });
+  const html = `<!DOCTYPE html><html><head><title>LKPD - ${nama}</title><style>body{font-family:sans-serif;padding:40px;max-width:800px;margin:0 auto}h1{color:#0891b2;font-size:20px}table{width:100%;border-collapse:collapse;margin:8px 0}@media print{body{padding:20px}}</style></head><body><h1>LKPD - Viskositas Fluida</h1><p><strong>Nama:</strong> ${nama}</p><table><tr style="background:#f1f5f9"><th style="border:1px solid #ccc;padding:4px;font-size:11px">No</th><th style="border:1px solid #ccc;padding:4px;font-size:11px">Fluida</th><th style="border:1px solid #ccc;padding:4px;font-size:11px">Bola</th><th style="border:1px solid #ccc;padding:4px;font-size:11px">d(cm)</th><th style="border:1px solid #ccc;padding:4px;font-size:11px">Massa(g)</th><th style="border:1px solid #ccc;padding:4px;font-size:11px">t(s)</th><th style="border:1px solid #ccc;padding:4px;font-size:11px">v(m/s)</th><th style="border:1px solid #ccc;padding:4px;font-size:11px">η(Pa·s)</th></tr>${tableRows}</table><script>window.print()<\/script></body></html>`;
+  const win = window.open('', '_blank');
+  if (win) { win.document.write(html); win.document.close(); }
+  showToast('📄 PDF dibuka di tab baru');
+}
+
+// ===== COMPARISON =====
+function runComparison(fluidA, fluidB) {
+  const resA = Physics.calculateResult({ fluidKey: fluidA, ballKey: 'baja', diameterCm: 1, heightM: 0.15 });
+  const resB = Physics.calculateResult({ fluidKey: fluidB, ballKey: 'baja', diameterCm: 1, heightM: 0.15 });
+  const fA = Physics.FLUIDS[fluidA], fB = Physics.FLUIDS[fluidB];
+  document.getElementById('comparison-result').classList.remove('hidden');
+  const thead = document.querySelector('#comparison-table thead tr');
+  thead.innerHTML = `<th class="py-2 px-3 text-left">Parameter</th><th class="py-2 px-3 text-center">${fA.name}</th><th class="py-2 px-3 text-center">${fB.name}</th><th class="py-2 px-3 text-center">Selisih</th>`;
+  const rows = [
+    ['Viskositas (Pa·s)', resA.viscosity.toFixed(4), resB.viscosity.toFixed(4), Math.abs(resA.viscosity - resB.viscosity).toFixed(4)],
+    ['Waktu (s)', resA.time.toFixed(3), resB.time.toFixed(3), Math.abs(resA.time - resB.time).toFixed(3)],
+    ['Kecepatan (m/s)', resA.terminalVelocity.toFixed(4), resB.terminalVelocity.toFixed(4), Math.abs(resA.terminalVelocity - resB.terminalVelocity).toFixed(4)]
+  ];
+  document.getElementById('comparison-body').innerHTML = rows.map(r => `<tr class="border-b" style="border-color:var(--border);color:var(--text-secondary)"><td class="py-2 px-3">${r[0]}</td><td class="py-2 px-3 text-center">${r[1]}</td><td class="py-2 px-3 text-center">${r[2]}</td><td class="py-2 px-3 text-center font-bold" style="color:var(--accent)">${r[3]}</td></tr>`).join('');
+}
+
+// ===== CHARTS =====
+function updateCharts() {
+  if (experiments.length === 0) { document.getElementById('grafik-empty').style.display = 'block'; return; }
+  document.getElementById('grafik-empty').style.display = 'none';
+  const fluidMap = {};
+  experiments.forEach(e => { if (!fluidMap[e.fluid]) fluidMap[e.fluid] = { eta: [], t: [], v: [] }; fluidMap[e.fluid].eta.push(e.eta); fluidMap[e.fluid].t.push(e.t); fluidMap[e.fluid].v.push(e.v); });
+  const labels = Object.keys(fluidMap);
+  const avgEta = labels.map(l => fluidMap[l].eta.reduce((a,b)=>a+b,0) / fluidMap[l].eta.length);
+  const avgT = labels.map(l => fluidMap[l].t.reduce((a,b)=>a+b,0) / fluidMap[l].t.length);
+  const avgV = labels.map(l => fluidMap[l].v.reduce((a,b)=>a+b,0) / fluidMap[l].v.length);
+  const chartOpts = { responsive: true, plugins: { legend: { display: false } } };
+  if (chartViscosity) chartViscosity.destroy();
+  if (chartTime) chartTime.destroy();
+  if (chartVelocity) chartVelocity.destroy();
+  chartViscosity = new Chart(document.getElementById('chart-viscosity'), { type: 'bar', data: { labels, datasets: [{ data: avgEta, backgroundColor: '#06b6d4', borderRadius: 6 }] }, options: chartOpts });
+  chartTime = new Chart(document.getElementById('chart-time'), { type: 'bar', data: { labels, datasets: [{ data: avgT, backgroundColor: '#8b5cf6', borderRadius: 6 }] }, options: chartOpts });
+  chartVelocity = new Chart(document.getElementById('chart-velocity'), { type: 'bar', data: { labels, datasets: [{ data: avgV, backgroundColor: '#f59e0b', borderRadius: 6 }] }, options: chartOpts });
+}
+
+// ===== TOGGLES =====
+document.getElementById('chk-stopwatch').addEventListener('change', e => { document.getElementById('stopwatch-display').style.display = e.target.checked ? 'block' : 'none'; });
+document.getElementById('chk-ruler').addEventListener('change', e => { document.getElementById('ruler-el').style.display = e.target.checked ? 'block' : 'none'; });
+document.getElementById('chk-trail').addEventListener('change', e => { if (!e.target.checked) document.getElementById('ball-trail').classList.add('hidden'); });
+document.getElementById('fluid-select').addEventListener('change', changeLiquid);
+document.getElementById('gelas-select').addEventListener('change', () => { createGraduatedCylinder(); resetSim(); });
+document.getElementById('ball-select').addEventListener('change', () => { if (simState === 'prepared') placeBall(); });
+document.getElementById('diameter-select').addEventListener('change', () => { if (simState === 'prepared') placeBall(); });
+
+// ===== RIPPLE =====
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.btn-hover, .tab-btn');
+  if (!btn) return;
+  const rect = btn.getBoundingClientRect();
+  const circle = document.createElement('span');
+  circle.className = 'ripple-circle';
+  circle.style.left = (e.clientX - rect.left - 20) + 'px';
+  circle.style.top = (e.clientY - rect.top - 20) + 'px';
+  btn.appendChild(circle);
+  setTimeout(() => circle.remove(), 600);
+});
+
+
+// ===== INIT =====
+createGraduatedCylinder();
+changeLiquid();
+updateDashboardProgress(1);
+updateDashboardStats();
+lucide.createIcons();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a14a7328c1d87e17',t:'MTc4Mjk2MTc0Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+</body></html>
